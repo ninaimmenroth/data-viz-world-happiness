@@ -79,3 +79,43 @@ varImpPlot(rf.whr)
 # however the bottom with year, social_support and generosity is stable over
 # each iteration
 # the first 4 are also pretty stable, even if they can switch places
+
+
+# look at connections between all numerical variables
+pairs(whr_sub)
+
+# try pca on subset with numerical variables
+whr_sub <- whr[,-c(1,2,10)]
+# fix perception of corruption to be numeric
+whr_sub$perceptions_of_corruption <- as.numeric(whr_sub$perceptions_of_corruption)
+# filter rows where perceptions_of_corruption is NA
+whr_sub <- na.omit(whr_sub)
+pr.out <- prcomp(whr_sub, scale = TRUE)
+summary(pr.out)
+
+# get percent of variance of each principal component
+perc <- pr.out$sdev/sum(pr.out$sdev)
+
+# plot it
+plot(perc, xlab = "Principal Component", ylab = "Proportion of Variance Explained", ylim = c(0,1), type = "b")
+# wow this is kinda sad
+
+# ok trying kmeans without pca only on the numerical variables
+# find out good k with sum of squares
+sc_whr <- scale(whr_sub)
+wss <- c()
+for (k in 2:7) {
+  km.out <- kmeans(sc_whr, centers = k, nstart = 20)
+  wss <- append(wss, km.out$tot.withinss)
+}
+plot(wss, xlab = "k", ylab = "WSS", type = "b")
+# decrease is quite consistent, let's take k = 4
+
+km.out <- kmeans(whr_sub, centers = 2, nstart = 20)
+km.out
+
+# show scatterplots again coloured by assigned cluster
+pairs(sc_whr, col = km.out$cluster, pch = 16)
+# for each plot where the happiness score is involved, we see clear clusters
+
+
