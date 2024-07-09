@@ -117,5 +117,3 @@ km.out
 # show scatterplots again coloured by assigned cluster
 pairs(sc_whr, col = km.out$cluster, pch = 16)
 # for each plot where the happiness score is involved, we see clear clusters
-
-
