@@ -4,8 +4,6 @@ library(tidyverse)
 
 # load data
 whr <- read.csv("Data/WHR_AllYears.csv")
-# delete X
-whr$X <- NULL
 
 summary(whr)
 str(whr)
@@ -82,10 +80,10 @@ varImpPlot(rf.whr)
 
 
 # look at connections between all numerical variables
+whr_sub <- whr[,-c(1,2,10)]
 pairs(whr_sub)
 
 # try pca on subset with numerical variables
-whr_sub <- whr[,-c(1,2,10)]
 # fix perception of corruption to be numeric
 whr_sub$perceptions_of_corruption <- as.numeric(whr_sub$perceptions_of_corruption)
 # filter rows where perceptions_of_corruption is NA
@@ -109,7 +107,7 @@ for (k in 2:7) {
   wss <- append(wss, km.out$tot.withinss)
 }
 plot(wss, xlab = "k", ylab = "WSS", type = "b")
-# decrease is quite consistent, let's take k = 4
+# decrease is quite consistent, let's take k = 2
 
 km.out <- kmeans(whr_sub, centers = 2, nstart = 20)
 km.out

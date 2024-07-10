@@ -27,4 +27,4 @@ whr23$year <- 2023
 whr_all_years <- rbind(whr15, whr16, whr17, whr18, whr19, whr20, whr21, whr22, whr23)
 
 # save df to csv
-write.csv(whr_all_years, "Data/WHR_AllYears.csv")
+write.csv(whr_all_years, "Data/WHR_AllYears.csv", row.names = FALSE)
