@@ -14,20 +14,20 @@ editor: source
 To explore interesting structures in the data worth looking into we will
 use basic variable plotting around the main variable "happiness_score" to get a first feeling for the data. Afterwards we will look into how a RandomForest Classifier model would rate the importancy of variables when trying to predict the happiness score. Lastly, a Kmeans model is used to look into a possible clustering of the data and how the resulting clusters can be interpreted.
 
-## Loading the packages
 ```{r}
+#| echo: false
 #| output: false
- 
+
 # loading needed libraries
 library(here)
 library(tidyverse)
 library(GGally)
+library(grid)
+library(randomForest)
 ```
 
-## Loading the data
 ```{r}
-#| output: false
-
+#| echo: false
 # loading the needed data
 whr <- read.csv(here::here("Data/WHR_AllYears.csv"))
 ```
@@ -36,10 +36,22 @@ whr <- read.csv(here::here("Data/WHR_AllYears.csv"))
 
 INSERT VARIABLE MEANINGS HERE
 
-## Looking into relationship of "happiness_score" and potential predictors
+## Looking at distribution of the happiness score
+```{r}
+#| echo: false
+ggplot(whr, aes(x = happiness_score)) +
+  geom_freqpoly(bins = 10) +
+  ggtitle("Distribution of Happiness Score") +
+  xlab("Happiness Score") +
+  theme(text = element_text(size = 15))
+```
+When looking at our variable of interest, it's clearly visible that the distribution is quite close to a normal distribution.
+
+## Looking into relationship of the happiness score to predictors
 
 ### Region
 ```{r}
+#| echo: false
 whr |>
   ggplot(aes(x = region, y = happiness_score, fill = region)) +
   geom_boxplot() +
@@ -50,12 +62,13 @@ whr |>
   ylab("Happiness Score") +
   coord_flip()
 ```
-When looking at how the Happiness score is connected to the regions of the countries we have data for, we can see that they differ a lot in their spread. Western Europe and North America and ANZ have the comparitively highest median happiness scores. In contrast, for Sub-Saharan Africa and South Asia the median happiness is the lowest. The regions also differ strongly in the variance. The variables within the first and third quarter percentiles cover a big range in the Middle East and North Africa while for Africa and North America the boxes
+When looking at how the happiness score is connected to the regions of the countries we have data for, we can see that they differ a lot in their spread. Western Europe and North America and ANZ have the comparitively highest median happiness scores. In contrast, for Sub-Saharan Africa and South Asia the median happiness is the lowest. The regions also differ strongly in the variance. The variables within the first and third quarter percentiles cover a big range in the Middle East and North Africa while for Africa and North America the boxes
 are very small. <br>
-For the following looks at the variables, regions is understood as an aggregation for the variable country, as there are a big number of countries covered that it is not possible to visualize it. We are looking into countries that show interesting patterns later in the report.
+Regions is understood as an aggregation for the variable country, as there are a big number of countries covered that it is not possible to visualize it. We are looking into countries that show interesting patterns later in the report.
 
 ### GDP per Capita
 ```{r}
+#| echo: false
 whr |>
   ggplot(aes(x = gdp_per_capita, y = happiness_score)) +
   geom_point() +
@@ -66,13 +79,15 @@ whr |>
 ```
 There seems to be a positive linear relationship between GDP per capita and the happiness score, as with higher GDP the happiness score rises. The relationship is stronger than it seems from the plot, as the scale ratio of x- and y-axis are so different. Calculating the correlation helps with providing further prove for the linear relationship between the variables.
 ```{r}
+#| echo: false
 # correlation of gdp per capita and happiness score
-cor(whr$gdp_per_capita, whr$happiness_score)
+cat("Correlation of the happiness score and GDP per capita:",cor(whr$gdp_per_capita, whr$happiness_score))
 ```
 The correlation of these variables - as expected - is very high.
 
 ### Social Support
 ```{r}
+#| echo: false
 whr |>
   ggplot(aes(x = social_support, y = happiness_score)) +
   geom_point() +
@@ -83,12 +98,15 @@ whr |>
 ```
 Similar to GDP per Capita, there is a positive linear relationship between both variables.
 ```{r}
-cor(whr$social_support, whr$happiness_score)
+#| echo: false
+cat("Correlation of the happiness score and social support:",cor(whr$social_support, whr$happiness_score))
 ```
 The correlation between social support and happiness score isn't as strong as for GDP per capita but still very strong.
 
 ### Healthy life expectancy
 ```{r}
+#| echo: false
+#| warning: false
 whr |>
   ggplot(aes(x = healthy_life_expectancy, y = happiness_score)) +
   geom_point() +
@@ -99,12 +117,14 @@ whr |>
 ```
 Here, we again have a positive linear relationship between the two variables. Interestingly, for healthy life expectancy some values are missing.
 ```{r}
-cor(whr$healthy_life_expectancy, whr$happiness_score, use = "complete.obs")
+#| echo: false
+cat("Correlation of the happiness score and healthy life expectancy:",cor(whr$healthy_life_expectancy, whr$happiness_score, use = "complete.obs"))
 ```
 There a strong positive correlation between healthy life expectancy and the happiness score.
 
 ### Freedom to make life choices
 ```{r}
+#| echo: false
 whr |>
   ggplot(aes(x = freedom_to_make_life_choices, y = happiness_score)) +
   geom_point() +
@@ -115,12 +135,14 @@ whr |>
 ```
 In this case, there also is a positive linear relationship between freedom to make life choices and happiness score, even though it seems a bit weaker than with the variables discussed so far.
 ```{r}
-cor(whr$freedom_to_make_life_choices, whr$happiness_score)
+#| echo: false
+cat("Correlation of the happiness score and freedom to make life choices:",cor(whr$freedom_to_make_life_choices, whr$happiness_score))
 ```
 In general, there is a strong positive correlation between the variables but it is the weakest so far.
 
 ### Generosity
 ```{r}
+#| echo: false
 whr |>
   ggplot(aes(x = generosity, y = happiness_score)) +
   geom_point() +
@@ -133,6 +155,8 @@ There is no connection between the variables visible here.
 
 ### Perceptions of corruption
 ```{r}
+#| echo: false
+#| warning: false
 # fix data type of perceptions of corruption
 whr$perceptions_of_corruption <- as.numeric(whr$perceptions_of_corruption)
 whr |>
@@ -145,12 +169,14 @@ whr |>
 ```
 For perceptions of corruption, there seems to be a slight upward trend in happiness score for higher perceptions of corruption but it's only a fraction of data points that score high on perceptions of corruption. Also there is missing data for this variable.
 ```{r}
+#| echo: false
 cor(whr$perceptions_of_corruption, whr$happiness_score, use = "complete.obs")
 ```
 Calculationg the correlation shows that there is again a positive correlation between the two variables, even if it appears weak compared to other variables that have been looked at-
 
 ### Year
 ```{r}
+#| echo: false
 whr$year <- as.factor(whr$year)
 whr |>
   ggplot(aes(x = year, y = happiness_score, fill = year)) +
@@ -170,9 +196,9 @@ It is important to mention that K-Means can only be used for continuous variable
 ### Introduction K-Means
 K-Means Clustering is an unsupervised machine learning method that can help classify data that has no label that a model could be trained on. This is made possible by a distance-based approach that fits the clusters so that the distances between the data points within a cluster are minimal. The distance in this case is a measure of similarity between data points, so in other words we want to fit clusters so that the points contained in one cluster are as similar as possible.
 
-### Prepare data for K-Means
-First, we create a subset of the full data frame that only contains the numerical values. We also delete rows that contain NA-values.
+### Trying PCA to improve K-Means performance
 ```{r}
+#| echo: false
 # create a subset that doesn't contain country, region and year
 whr_sub <- whr[,-c(1,2,10)]
 
@@ -181,11 +207,15 @@ whr_sub <- na.omit(whr_sub)
 ```
 A good measure for improving the performance of K-Means is doing PCA on the data as it can aggregate the information. However, PCA is only useful if you can cover around 80% of the data with only few principle components.
 ```{r}
+#| echo: false
 pr.out <- prcomp(whr_sub, scale = TRUE)
 
 # get percent of variance of each principal component
 perc <- pr.out$sdev/sum(pr.out$sdev)
+```
 
+```{r}
+#| echo: false
 # plot cumulative sum of the percentages
 plot(cumsum(perc),
   xlab = "Principal Component",
@@ -200,6 +230,7 @@ As can be seen, it would be necessary to use four to five of seven variables to 
 In general, the higher the number of clusters, the more similar points will be within one cluster. However, the model also gets harder to interpret and messy. So using the elbow-criteria, the hyperparameter k that equals the number of clusters will be sensibly minimized so that we get an interpretable result. <br>
 We test the total within sum of squares for two to ten clusters.
 ```{r}
+#| echo: false
 # scale data
 sc_whr <- scale(whr_sub)
 
@@ -211,18 +242,72 @@ for (k in 2:7) {
   km.out <- kmeans(sc_whr, centers = k, nstart = 20)
   wss <- append(wss, km.out$tot.withinss)
 }
+```
 
+```{r}
+#| echo: false
 # plot the resulting values
-plot(wss, xlab = "k", ylab = "WSS", type = "b")
+plot(wss, xlab = "k", ylab = "WSS", type = "b", main = "Within sum of squares over different amounts of clusters")
 ```
 Using the elbow criterium, it can be seen that after k = 2, the decrease of within sum of squares isn't as strong anymore. Therefore, the final K-Means model is trained with two clusters.
 
-### Training K-Means and plotting clusters
+### Resulting plots
 ```{r}
+#| echo: false
 # train K-Means
 km.out <- kmeans(sc_whr, centers = 2, nstart = 20)
 
-# plot resulting clustering
-pairs(sc_whr, col = km.out$cluster, upper.panel = NULL, gap = 0)
+my.text.panel <- function(labels) {
+  function(x, y, lbl, ...) {
+    if (lbl %in% names(labels)) lbl <- labels[[lbl]]
+    text(x, y, lbl, ...)
+  }
+}
 ```
+
+```{r fig.width=10, fig.height=10}
+#| echo: false
+# plot resulting clustering
+pairs(sc_whr, col = km.out$cluster, upper.panel = NULL, gap = 0,
+      main = "Matrix of scatterplots coloured by cluster",
+      text.panel = my.text.panel(c(happiness_score="Happiness Score",
+                                   gdp_per_capita="GDP p. Capita",
+                                   social_support="Social Support",
+                                   healthy_life_expectancy="HL Expectancy",
+                                   freedom_to_make_life_choices = "Freedom Life Choices",
+                                   generosity = "Generosity",
+                                   perceptions_of_corruption = "Perceived corruption")))
+```
+When looking at the scatterplots, the first thing to be noted is that for happiness score, there is
+the cleanest split between the clusters which basically splits the plot into a happiness score that is bigger than 0 and vice versa. In other words, the clusters are strongly informed by whether the happiness score is in the upper 50% quantile or below.
+
+```{r}
+#| echo: false
+sc_whr <- as.data.frame(sc_whr)
+cat("Median of the happiness score:",median(sc_whr$happiness_score))
+```
+For further context, the median value of the happiness score is almost perfectly zero. From the initial plots it has been shown that the happiness score correlates with all variables plotted here except for generosity. From the matrix of scatterplots we can gather that all plots within the matrix show the same pattern of the red cluster being in the lower left and the black cluster in the upper.
+
+## Using Random Forest to rank feature importance
+When training a random forest on data, multiple trees are fitted on random subsets of data with only using a subset of variables in each iteration. There are two different types of variable importance the resulting plot provides.
+```{r fig.width = 10}
+#| echo: false
+# create a version of whr that contains all variables but no NAs
+whr_noNA <- na.omit(whr)
+
+# run randomforest on this data
+set.seed(1)
+rf.whr <- randomForest(happiness_score ~ ., data = whr_noNA, mtry = 3, ntree = 100,
+                       importance = TRUE)
+# mtry: amount of variables used for each iteration (floor(sqrt(n)) is rule of thumb)
+# ntree: number of trees that are grown
+# importance: is importance of predictors to be assessed or not
+
+# plot importance of variables
+varImpPlot(rf.whr, scale = FALSE)
+```
+The first one is an increase or decrease in the mean squared error of the tree, which gives a top level information on how far off the actual data is from the predicted values. The variables are ordered by how much the variables impact the mean squared error when being applied. From this example, GPD per capita improves the trees the most as it lowers the MSE a lot and vice versa - when it is missing, the MSE is higher. <br>
+Node Purity on the other hand represents how well the tree splits the data. In simple words, it contains information on how often a variable is used to split branches in the tree and how many observations are processed by this split. The more observations this variable splits and the more often it's used, the more importance is the variable. <br>
+When predicting the happiness score, GDP per capita and healthy life expectancy are ranked the highest for both importancy measures. This coincides with the high correlations that have been measured for the scatterplots between happiness score and the two variables. <br>
+An important thing to keep in mind is that there's an element of randomness in these results. For different seeds, the top four variables are stable, but how important they are and their ranking can be different. It also should be noted at an increased MSE of 20% for example freedom to make life choices is still a strong impact, even if this variable appears of low rank compared to others.
 
