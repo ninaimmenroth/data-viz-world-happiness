@@ -7,6 +7,7 @@ whr <- read.csv("Data/WHR_AllYears.csv")
 
 summary(whr)
 str(whr)
+?str
 
 table(whr$country)
 # some countries don't appear 9 times / "each year" in the data
@@ -115,3 +116,27 @@ km.out
 # show scatterplots again coloured by assigned cluster
 pairs(sc_whr, col = km.out$cluster, pch = 16)
 # for each plot where the happiness score is involved, we see clear clusters
+
+# correlation matrix plot
+library(corrplot)
+
+#remove non-numeric variables
+whr_num <- whr[, c(3,4,5,6,7,8,9,10)]
+whr_num$perceptions_of_corruption <- as.numeric(whr_num$perceptions_of_corruption)
+
+# remove NaN values
+whr_num_nonan <- na.omit(whr_num)
+
+# calculate correlation
+whr_cor <- cor(whr_num_nonan)
+
+# calculate p-values
+testRes <- cor.mtest(whr_num_nonan, conf.level = 0.95)
+
+corrplot.mixed(whr_cor, order = 'AOE')
+
+corrplot(whr_cor, p.mat = testRes$p, method = 'circle', type = 'lower', insig='blank',
+         addCoef.col ='black', number.cex = 0.8, order = 'AOE', diag=FALSE)
+
+
+
