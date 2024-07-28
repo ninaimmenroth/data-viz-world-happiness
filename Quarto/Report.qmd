@@ -444,7 +444,7 @@ It is important to mention that K-Means can only be used for continuous variable
 ## Introduction K-Means
 K-Means Clustering is an unsupervised machine learning method that can help classify data that has no label that a model could be trained on. This is made possible by a distance-based approach that fits the clusters so that the distances between the data points within a cluster are minimal. The distance in this case is a measure of similarity between data points, so in other words we want to fit clusters so that the points contained in one cluster are as similar as possible.
 
-## Trying PCA for K-Means performance optimization
+## Using PCA for K-Means performance optimization
 ```{r}
 #| echo: false
 # create a subset that doesn't contain country, region and year
@@ -475,11 +475,11 @@ plot(cumsum(perc),
   ylim = c(0,1),
   type = "b")
 ```
-As can be seen, it would be necessary to use four to five of seven variables to cover a sufficient amount of variance. Since this isn't too helpful and each principle component contains a similar amount of variance, there will be no PCA used before doing K-Means.
+As can be seen, it would be necessary to use four to five of seven variables to cover a sufficient amount of variance. Since this isn't too helpful and each principle component contains a similar amount of variance, PCA isn't applied.
 
 ## Finding a good amount of clusters
-In general, the higher the number of clusters, the more similar points will be within one cluster. However, the model also gets harder to interpret and messy. So using the elbow-criteria, the hyperparameter k that equals the number of clusters will be sensibly minimized so that we get an interpretable result. <br>
-We test the total within sum of squares for two to ten clusters.
+In general, the higher the number of clusters, the more similar points will be within one cluster. However, the model also gets harder to interpret and messy. So using the elbow-criterium, the hyperparameter k that equals the number of clusters should be sensibly minimized so that we get an interpretable result. <br>
+To find k, the total within sum of squares for two to ten clusters is calculated and plotted.
 ```{r}
 #| echo: false
 # scale data
@@ -505,7 +505,7 @@ for (k in 2:7) {
 plot(wss, xlab = "k", ylab = "WSS", type = "b", main = "Within sum of squares over different amounts of clusters")
 abline(v = 2, col = "red", lty = 2)
 ```
-Using the elbow criterium, it can be seen that after k = 2, the decrease of within sum of squares isn't as strong anymore. Therefore, the final K-Means model is trained with two clusters.
+After k = 2 the decrease of within sum of squares isn't as strong anymore. Therefore, the K-Means model is trained with two clusters.
 
 ## Resulting plots
 ```{r}
