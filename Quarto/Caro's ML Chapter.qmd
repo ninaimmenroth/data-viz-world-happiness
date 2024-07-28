@@ -1,0 +1,133 @@
+---
+title: "Final ML Chapter"
+author: "Caroline Graebel"
+format:
+  html:
+    embed-resources: true
+    number-sections: true
+    toc: true
+    toc_float: true
+editor: source
+---
+
+## Using K-means Clustering to find interesting patterns
+It is the goal to use K-means clustering to provide a pattern that is interpretable and give further context to the relationship between the happiness score and other variables. The procedure will first be introduced, then the data is scaled for an optimal performance and the best amount of clusters will be chosen by using the elbow-criteria to sensibly minimize total within sum-of-squares. In other words, the goal is to minimize the overall distance between points in each cluster. At the end, a final model is trained and the result is plotted. <br>
+It is important to mention that K-Means can only be used for continuous variables, so country, region, and year are not considered here.
+
+### Introduction K-Means
+K-Means Clustering is an unsupervised machine learning method that can help classify data that has no label that a model could be trained on. This is made possible by a distance-based approach that fits the clusters so that the distances between the data points within a cluster are minimal. The distance in this case is a measure of similarity between data points, so in other words we want to fit clusters so that the points contained in one cluster are as similar as possible.
+
+### Trying PCA for K-Means performance optimization
+```{r}
+#| echo: false
+# create a subset that doesn't contain country, region and year
+whr_sub <- whr[,-c(1,2,10)]
+
+# delete rows that contain NAs from the data frame
+whr_sub <- na.omit(whr_sub)
+```
+A good measure for improving the performance of K-Means is doing PCA on the data as it can aggregate the information. However, PCA is only useful if you can cover around 80% of the data with only few principle components.
+```{r}
+#| echo: false
+pr.out <- prcomp(whr_sub, scale = TRUE)
+
+# get percent of variance of each principal component
+perc <- pr.out$sdev/sum(pr.out$sdev)
+```
+
+```{r}
+#| echo: false
+# plot cumulative sum of the percentages
+plot(cumsum(perc),
+  xlab = "Principal Component",
+  ylab = "Proportion of Variance Explained",
+  main = "Cum. Prop. of Variance explained by each Principle Component",
+  ylim = c(0,1),
+  type = "b")
+```
+As can be seen, it would be necessary to use four to five of seven variables to cover a sufficient amount of variance. Since this isn't too helpful and each principle component contains a similar amount of variance, there will be no PCA used before doing K-Means.
+
+### Finding a good amount of clusters
+In general, the higher the number of clusters, the more similar points will be within one cluster. However, the model also gets harder to interpret and messy. So using the elbow-criteria, the hyperparameter k that equals the number of clusters will be sensibly minimized so that we get an interpretable result. <br>
+We test the total within sum of squares for two to ten clusters.
+```{r}
+#| echo: false
+# scale data
+sc_whr <- scale(whr_sub)
+
+# initiate vector to store total within sum of squares for each kmeans()-object
+wss <- c()
+
+# run kmeans for k equals two to seven and save total within sum of squares
+for (k in 2:7) {
+  km.out <- kmeans(sc_whr, centers = k, nstart = 20)
+  wss <- append(wss, km.out$tot.withinss)
+}
+```
+
+```{r}
+#| echo: false
+# plot the resulting values
+plot(wss, xlab = "k", ylab = "WSS", type = "b", main = "Within sum of squares over different amounts of clusters")
+```
+Using the elbow criterium, it can be seen that after k = 2, the decrease of within sum of squares isn't as strong anymore. Therefore, the final K-Means model is trained with two clusters.
+
+### Resulting plots
+```{r}
+#| echo: false
+# train K-Means
+km.out <- kmeans(sc_whr, centers = 2, nstart = 20)
+
+my.text.panel <- function(labels) {
+  function(x, y, lbl, ...) {
+    if (lbl %in% names(labels)) lbl <- labels[[lbl]]
+    text(x, y, lbl, ...)
+  }
+}
+```
+
+```{r fig.width=10, fig.height=10}
+#| echo: false
+# plot resulting clustering
+pairs(sc_whr, col = km.out$cluster, upper.panel = NULL, gap = 0,
+      main = "Matrix of scatterplots coloured by cluster",
+      text.panel = my.text.panel(c(happiness_score="Happiness Score",
+                                   gdp_per_capita="GDP p. Capita",
+                                   social_support="Social Support",
+                                   healthy_life_expectancy="HL Expectancy",
+                                   freedom_to_make_life_choices = "Freedom Life Choices",
+                                   generosity = "Generosity",
+                                   perceptions_of_corruption = "Perceived corruption")))
+```
+When looking at the scatterplots, the first thing to be noted is that for happiness score, there is
+the cleanest split between the clusters which basically splits the plot into a happiness score that is bigger than 0 and vice versa. In other words, the clusters are strongly informed by whether the happiness score is in the upper 50% quantile or below.
+
+```{r}
+#| echo: false
+sc_whr <- as.data.frame(sc_whr)
+cat("Median of the happiness score:",median(sc_whr$happiness_score))
+```
+For further context, the median value of the happiness score is almost perfectly zero. From the initial plots it has been shown that the happiness score correlates with all variables plotted here except for generosity. We can see that all plots in the matrix show a similar pattern of a red cluster on the right and a black cluster on the left. The stronger the correlation between any variables, the less overlap the clusters appear to have. For GDP per capita and healthy life expectancy for example, the scatterplot shows a positive linear relationship between the two variables and the overlap is very little compared to generosity's interaction with freedom to make life choices, where most of the clusters overlap and no strong correlation exists.
+
+## Using Random Forest to rank feature importance
+When training a random forest on data, multiple trees are fitted on random subset of predictors in each iteration. The resulting plot provides two different types of variable importance which means how much a variable is contributing to improving the model.
+```{r fig.width = 10}
+#| echo: false
+# create a version of whr that contains all variables but no NAs
+whr_noNA <- na.omit(whr)
+
+# run randomforest on this data
+set.seed(1)
+rf.whr <- randomForest(happiness_score ~ ., data = whr_noNA, mtry = 3, ntree = 100,
+                       importance = TRUE)
+# mtry: amount of variables used for each iteration (floor(sqrt(n)) is rule of thumb)
+# ntree: number of trees that are grown
+# importance: is importance of predictors to be assessed or not
+
+# plot importance of variables
+varImpPlot(rf.whr, scale = FALSE, main = "Feature Importance for predicting Happiness Score")
+```
+The left plot shows how much a variable contributes to decreasing the mean squared error of the resulting model. The mean squared error measures the difference between the true values and predictions. The variables are ordered by how much the variables increase the mean squared error when being left out. From this example, GDP per capita improves the tree by lowering the MSE the most and vice versa - when it is missing, the MSE is a lot higher. <br>
+Node Purity on the other hand represents how well the tree splits the data in similar target values. The more often variable is used for splitting a node in two further branches, the more important is the variable. In this plot GDP per capita again ranks highest, which means that it provides a useful condition on which to split groups. <br>
+When predicting the happiness score, GDP per capita and healthy life expectancy are ranked the highest for both importancy measures. This coincides with the high correlations that have been measured for the scatterplots between happiness score and the two variables. <br>
+An important thing to keep in mind is that there's an element of randomness in these results. For different seeds, the top four variables are stable, but how important they are and their ranking can be different. It also should be noted at an increased MSE of 20% for example freedom to make life choices is still a strong impact, even if this variable appears of low rank compared to others.
