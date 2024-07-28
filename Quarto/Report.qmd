@@ -10,9 +10,45 @@ format:
 editor: source
 ---
 
+# Background
+
+## About the World Happiness Report
+
+The World Happiness Report (WHR) is a reflection of the worldwide evaluation of happiness and well-being across 170 countries (World Happiness Report). WHR measures the happiness state on a yearly basis and emphasizes the need for incorporating well-being factors in government policy making.
+
+The report is a collaboration of Gallup, the Oxford Wellbeing Research Centre, the United Nation's Sustainable Development Solutions Network and the WHR's Editorial Board. The first report was released in the year 2012.
+
+## Understanding the Happiness Score
+
+Happiness scores are measured based on the survey responses from the Gallup World Poll (World Happiness Report). The evaluation from the Gallup World Poll primarily stems from answers of the survey questions and the Cantril Ladder score. The poll comprises of more than 100 questions that includes global questions and region-specific topics regarding several well-being areas. Those well-being areas include law and order, good jobs, well-being, food and shelter, institutions and infrastructure, and brain gain (Wikipedia 2024). Gallup typically collects for a sample size of 1,000 people for each country annually.
+
+Next, the Cantril Ladder score is a score range of 0 to 10, where 0 being the worst well-being condition and 10 being the best well-being condition. The Cantril Ladder asks to rate the current state of the respondents' well-being between 0 and 10. The country happiness rankings are representative from three year samples of the poll.
+
+Six explanatory variables are derived from the poll answers and the estimations of those six variables associating with the happiness score would explain the variation across different countries. Those variables include Gross Domestic Product (GDP) per capita, healthy life expectancy, social support, freedom, corruption and generosity.
+
+## 6 Explanatory Variables
+
+In Figure 2.1 of the World Happiness Report 2024, the happiness score or life evaluation is indicated for each country in the entire dataset.
+
+![WHR Figure 2.1: Country Rankings by Life Evaluations in 2021-2023](WHR_CountryRankings_Explained.png)
+
+According to the report, the sub-bars do not influence the total score reported for each country (World Happiness Report 2024), however they merely indicate the country's overall score explained by each of the six explanatory variables (World Happiness Report). The sub-bars are measured by multiplying average data for the period of the last 3 years for each of those variables. For the 2024 report, the national average for 2021-2023 are calculated for the display of the sub-bars for each variable.
+
+**GDP per capita** is the purchasing power parity at 2017 constant international dollar prices from World Development Indicators. When the latest GDP per capita is not available as of a certain date of the year, country-specific forecasts of real GDP growth from the Economic Outlook is used for average calculation. If it is unavailable from the Economic Outlook, then forecasts from the World Bank's Global Economic Prospects are utilized.
+
+**Healthy Life Expectancy** (LSE) at birth are based on the Global Health Observatory data by the World Health Organization (WHO).
+
+**Social support** represents the national average of the ability to rely on someone in times of trouble and the representation is in binary responses (either 0 or 1). In the Gallup World Poll, the binary response is collected from the question "If you were in trouble, do you have relatives or friends you can count on to help you whenever you need them, or not?"
+
+**Freedom** represents the ability to make life decisions from the Gallup World Poll question "Are you satisfied or dissatisfied with your freedom to choose what you do with your life?"
+
+**Generosity** is the national average of answers to the Gallup World Poll question "Have you donated money to a charity in the past month?"
+
+**Corruption** is the perceptive measure from the following 2 questions in the Gallup World Poll. Those questions are "Is corruption widespread throughout the government or not?" and "Is corruption widespread within businesses or not?".
+
 # Top Level analysis of the data
-To explore interesting structures in the data we will
-use basic variable plotting around the main variable "happiness_score" to get a first feeling for the data. Afterwards we will look into how a RandomForest Classifier model would rate the importance of variables when trying to predict the happiness score. Lastly, a Kmeans model is used to look into a possible clustering of the data and how the resulting clusters can be interpreted.
+
+To explore interesting structures in the data we will use basic variable plotting around the main variable "happiness_score" to get a first feeling for the data. Afterwards we will look into how a RandomForest Classifier model would rate the importance of variables when trying to predict the happiness score. Lastly, a Kmeans model is used to look into a possible clustering of the data and how the resulting clusters can be interpreted.
 
 ```{r}
 #| echo: false
@@ -37,6 +73,7 @@ whr <- read.csv(here::here("Data/WHR_AllYears.csv"))
 INSERT VARIABLE MEANINGS HERE
 
 ## Looking at distribution of the happiness score
+
 ```{r}
 #| echo: false
 ggplot(whr, aes(x = happiness_score)) +
@@ -45,11 +82,13 @@ ggplot(whr, aes(x = happiness_score)) +
   xlab("Happiness Score") +
   theme(text = element_text(size = 15))
 ```
+
 When looking at our variable of interest, it's clearly visible that the distribution is quite close to a normal distribution.
 
 ## Looking into relationship of the happiness score to predictors
 
 ### Region
+
 ```{r}
 #| echo: false
 whr |>
@@ -62,11 +101,11 @@ whr |>
   ylab("Happiness Score") +
   coord_flip()
 ```
-When looking at how the happiness score is connected to the regions of the countries we have data for, we can see that they differ a lot in their spread. Western Europe and North America and ANZ have the comparatively highest median happiness scores. In contrast, for Sub-Saharan Africa and South Asia the median happiness is the lowest. The regions also differ strongly in the variance. The interquartile range (the range of variables within the first and third quarter percentiles) is larger in the Middle East and North Africa while for Africa and North America the boxes
-are very small. <br>
-Regions is understood as an aggregation for the variable country, as there are a big number of countries covered that it is not possible to visualize it. We are looking into countries that show interesting patterns later in the report.
+
+When looking at how the happiness score is connected to the regions of the countries we have data for, we can see that they differ a lot in their spread. Western Europe and North America and ANZ have the comparatively highest median happiness scores. In contrast, for Sub-Saharan Africa and South Asia the median happiness is the lowest. The regions also differ strongly in the variance. The interquartile range (the range of variables within the first and third quarter percentiles) is larger in the Middle East and North Africa while for Africa and North America the boxes are very small. <br> Regions is understood as an aggregation for the variable country, as there are a big number of countries covered that it is not possible to visualize it. We are looking into countries that show interesting patterns later in the report.
 
 ### GDP per Capita
+
 ```{r}
 #| echo: false
 whr |>
@@ -77,15 +116,19 @@ whr |>
   ggtitle("Happiness Score over GDP per Capita") +
   theme(text = element_text(size = 15))
 ```
+
 There seems to be a positive linear relationship between GDP per capita and the happiness score, as with higher GDP the happiness score rises. The relationship is stronger than it seems from the plot, as the scale ratio of x- and y-axis are so different. Calculating the correlation helps to provide further proof for the linear relationship between the variables.
+
 ```{r}
 #| echo: false
 # correlation of gdp per capita and happiness score
 cat("Correlation of the happiness score and GDP per capita:",cor(whr$gdp_per_capita, whr$happiness_score))
 ```
+
 The correlation of these variables - as expected - is very high.
 
 ### Social Support
+
 ```{r}
 #| echo: false
 whr |>
@@ -96,14 +139,18 @@ whr |>
   ggtitle("Happiness Score over Social Support") +
   theme(text = element_text(size = 15))
 ```
+
 Similar to GDP per Capita, there is a positive linear relationship between both variables.
+
 ```{r}
 #| echo: false
 cat("Correlation of the happiness score and social support:",cor(whr$social_support, whr$happiness_score))
 ```
+
 The correlation between social support and happiness score isn't as strong as for GDP per capita but still very strong.
 
 ### Healthy life expectancy
+
 ```{r}
 #| echo: false
 #| warning: false
@@ -115,14 +162,18 @@ whr |>
   ggtitle("Happiness Score over Healthy Life Expectancy") +
   theme(text = element_text(size = 15))
 ```
+
 Here, we again have a positive linear relationship between the two variables. Interestingly, for healthy life expectancy some values are missing.
+
 ```{r}
 #| echo: false
 cat("Correlation of the happiness score and healthy life expectancy:",cor(whr$healthy_life_expectancy, whr$happiness_score, use = "complete.obs"))
 ```
+
 There a strong positive correlation between healthy life expectancy and the happiness score.
 
 ### Freedom to make life choices
+
 ```{r}
 #| echo: false
 whr |>
@@ -133,14 +184,18 @@ whr |>
   ggtitle("Happiness Score over Freedom to make Life Choices") +
   theme(text = element_text(size = 15))
 ```
+
 In this case, there also is a positive linear relationship between freedom to make life choices and happiness score, even though it seems a bit weaker than with the variables discussed so far.
+
 ```{r}
 #| echo: false
 cat("Correlation of the happiness score and freedom to make life choices:",cor(whr$freedom_to_make_life_choices, whr$happiness_score))
 ```
+
 In general, there is a strong positive correlation between the variables but it is the weakest so far.
 
 ### Generosity
+
 ```{r}
 #| echo: false
 whr |>
@@ -151,9 +206,11 @@ whr |>
   ggtitle("Happiness Score over Generosity") +
   theme(text = element_text(size = 15))
 ```
+
 There is no connection between the variables visible here.
 
 ### Perceptions of corruption
+
 ```{r}
 #| echo: false
 #| warning: false
@@ -167,15 +224,19 @@ whr |>
   ggtitle("Happiness Score over Perceptions of corruption") +
   theme(text = element_text(size = 15))
 ```
+
 For perceptions of corruption, there seems to be a slight upward trend in happiness score for higher perceptions of corruption but it's only a fraction of data points that score high on perceptions of corruption. Also there is missing data for this variable.
+
 ```{r}
 #| echo: false
 cat("Correlation of the happiness score and Perceptions of corruption:",
     cor(whr$perceptions_of_corruption, whr$happiness_score, use = "complete.obs"))
 ```
+
 Calculating the correlation shows that there is again a positive correlation between the two variables, even if it appears weak compared to other variables that have been looked at.
 
 ### Year
+
 ```{r}
 #| echo: false
 whr$year <- as.factor(whr$year)
@@ -188,16 +249,19 @@ whr |>
   ggtitle("Happiness Score over Years") +
   ylab("Happiness Score")
 ```
+
 For medians, there is a slight upwards trend over the years, which 2020 to 2022 having little variance compared to the other years. There are also negative outliers for 2021 to 2023.
 
 ## Using K-means Clustering to find interesting patterns
-It is the goal to use K-means clustering to provide a pattern that is interpretable and give further context to the relationship between the happiness score and other variables. The procedure will first be introduced, then the data is scaled for an optimal performance and the best amount of clusters will be chosen by using the elbow-criteria to sensibly minimize total within sum-of-squares <span style="color:red">Explain WSS</span>. At the end, a final model is trained and the result is plotted. <br>
-It is important to mention that K-Means can only be used for continuous variables, so country, region, and year are not considered here.
+
+It is the goal to use K-means clustering to provide a pattern that is interpretable and give further context to the relationship between the happiness score and other variables. The procedure will first be introduced, then the data is scaled for an optimal performance and the best amount of clusters will be chosen by using the elbow-criteria to sensibly minimize total within sum-of-squares [Explain WSS]{style="color:red"}. At the end, a final model is trained and the result is plotted. <br> It is important to mention that K-Means can only be used for continuous variables, so country, region, and year are not considered here.
 
 ### Introduction K-Means
+
 K-Means Clustering is an unsupervised machine learning method that can help classify data that has no label that a model could be trained on. This is made possible by a distance-based approach that fits the clusters so that the distances between the data points within a cluster are minimal. The distance in this case is a measure of similarity between data points, so in other words we want to fit clusters so that the points contained in one cluster are as similar as possible.
 
 ### Trying PCA to improve K-Means performance
+
 ```{r}
 #| echo: false
 # create a subset that doesn't contain country, region and year
@@ -206,7 +270,9 @@ whr_sub <- whr[,-c(1,2,10)]
 # delete rows that contain NAs from the data frame
 whr_sub <- na.omit(whr_sub)
 ```
+
 A good measure for improving the performance of K-Means is doing PCA on the data as it can aggregate the information. However, PCA is only useful if you can cover around 80% of the data with only few principle components.
+
 ```{r}
 #| echo: false
 pr.out <- prcomp(whr_sub, scale = TRUE)
@@ -225,11 +291,13 @@ plot(cumsum(perc),
   ylim = c(0,1),
   type = "b")
 ```
+
 As can be seen, it would be necessary to use four to five of seven variables to cover a sufficient amount of variance. Since this isn't too helpful and each principle component contains a similar amount of variance, there will be no PCA used before doing K-Means.
 
 ### Finding a good amount of clusters
-In general, the higher the number of clusters, the more similar points will be within one cluster. However, the model also gets harder to interpret and messy. So using the elbow-criteria, the hyperparameter k that equals the number of clusters will be sensibly minimized so that we get an interpretable result. <br>
-We test the total within sum of squares for two to ten clusters.
+
+In general, the higher the number of clusters, the more similar points will be within one cluster. However, the model also gets harder to interpret and messy. So using the elbow-criteria, the hyperparameter k that equals the number of clusters will be sensibly minimized so that we get an interpretable result. <br> We test the total within sum of squares for two to ten clusters.
+
 ```{r}
 #| echo: false
 # scale data
@@ -250,9 +318,11 @@ for (k in 2:7) {
 # plot the resulting values
 plot(wss, xlab = "k", ylab = "WSS", type = "b", main = "Within sum of squares over different amounts of clusters")
 ```
+
 Using the elbow criterium, it can be seen that after k = 2, the decrease of within sum of squares isn't as strong anymore. Therefore, the final K-Means model is trained with two clusters.
 
 ### Resulting plots
+
 ```{r}
 #| echo: false
 # train K-Means
@@ -279,18 +349,21 @@ pairs(sc_whr, col = km.out$cluster, upper.panel = NULL, gap = 0,
                                    generosity = "Generosity",
                                    perceptions_of_corruption = "Perceived corruption")))
 ```
-When looking at the scatterplots, the first thing to be noted is that for happiness score, there is
-the cleanest split between the clusters which basically splits the plot into a happiness score that is bigger than 0 and vice versa. In other words, the clusters are strongly informed by whether the happiness score is in the upper 50% quantile or below.
+
+When looking at the scatterplots, the first thing to be noted is that for happiness score, there is the cleanest split between the clusters which basically splits the plot into a happiness score that is bigger than 0 and vice versa. In other words, the clusters are strongly informed by whether the happiness score is in the upper 50% quantile or below.
 
 ```{r}
 #| echo: false
 sc_whr <- as.data.frame(sc_whr)
 cat("Median of the happiness score:",median(sc_whr$happiness_score))
 ```
-For further context, the median value of the happiness score is almost perfectly zero. From the initial plots it has been shown that the happiness score correlates with all variables plotted here except for generosity. From the matrix of scatterplots we can gather that all plots within the matrix show the same pattern of the red cluster being in the lower left and the black cluster in the upper.<span style="color:red">Last sentence?</span>
+
+For further context, the median value of the happiness score is almost perfectly zero. From the initial plots it has been shown that the happiness score correlates with all variables plotted here except for generosity. From the matrix of scatterplots we can gather that all plots within the matrix show the same pattern of the red cluster being in the lower left and the black cluster in the upper.[Last sentence?]{style="color:red"}
 
 ## Using Random Forest to rank feature importance
-When training a random forest on data, multiple trees are fitted on random subsets of data, using only a subset of variables in each iteration. The resulting plot provides two different types of variable importance. <span style="color:red">Not quite clear.</span>
+
+When training a random forest on data, multiple trees are fitted on random subsets of data, using only a subset of variables in each iteration. The resulting plot provides two different types of variable importance. [Not quite clear.]{style="color:red"}
+
 ```{r fig.width = 10}
 #| echo: false
 # create a version of whr that contains all variables but no NAs
@@ -307,9 +380,14 @@ rf.whr <- randomForest(happiness_score ~ ., data = whr_noNA, mtry = 3, ntree = 1
 # plot importance of variables
 varImpPlot(rf.whr, scale = FALSE)
 ```
-<span style="color:red">Not sure what this section means.</span>
-The first one is an increase or decrease in the mean squared error of the tree, which gives a top level information on how far off the actual data is from the predicted values. The variables are ordered by how much the variables impact the mean squared error when being applied. From this example, GDP per capita improves the trees the most as it lowers the MSE a lot and vice versa - when it is missing, the MSE is higher. <br>
-Node Purity on the other hand represents how well the tree splits the data. In simple words, it contains information on how often a variable is used to split branches in the tree and how many observations are processed by this split. The more observations this variable splits and the more often it's used, the more important is the variable. <br>
-When predicting the happiness score, GDP per capita and healthy life expectancy are ranked the highest for both importancy measures. This coincides with the high correlations that have been measured for the scatterplots between happiness score and the two variables. <br>
-An important thing to keep in mind is that there's an element of randomness in these results. For different seeds, the top four variables are stable, but how important they are and their ranking can be different. It also should be noted at an increased MSE of 20% for example freedom to make life choices is still a strong impact, even if this variable appears of low rank compared to others.
 
+[Not sure what this section means.]{style="color:red"} The first one is an increase or decrease in the mean squared error of the tree, which gives a top level information on how far off the actual data is from the predicted values. The variables are ordered by how much the variables impact the mean squared error when being applied. From this example, GDP per capita improves the trees the most as it lowers the MSE a lot and vice versa - when it is missing, the MSE is higher. <br> Node Purity on the other hand represents how well the tree splits the data. In simple words, it contains information on how often a variable is used to split branches in the tree and how many observations are processed by this split. The more observations this variable splits and the more often it's used, the more important is the variable. <br> When predicting the happiness score, GDP per capita and healthy life expectancy are ranked the highest for both importancy measures. This coincides with the high correlations that have been measured for the scatterplots between happiness score and the two variables. <br> An important thing to keep in mind is that there's an element of randomness in these results. For different seeds, the top four variables are stable, but how important they are and their ranking can be different. It also should be noted at an increased MSE of 20% for example freedom to make life choices is still a strong impact, even if this variable appears of low rank compared to others.
+
+# References
+
+1.  World Happiness Report. *About*. Retrieved July 26, 2024, from <https://worldhappiness.report/about/>
+2.  World Happiness Report. *World Happiness Report Appendices & Date*. Retrieved July 26, 2024 from<https://worldhappiness.report/data/>
+3.  Wikipedia. (2024, July). *Gallup, Inc.* Retrieved July 27, 2024, from <https://en.wikipedia.org/wiki/Gallup,_Inc.#Gallup_World_Poll>
+4.  World Happiness Report. (2024). *World Happiness Report 2024 Figure 2.1: Country Rankings by Life Evaluations in 2021-2023*. Retrieved July 27, 2024, from <https://public.tableau.com/app/profile/worldhappiness/viz/2024Draft/Figure2_1>
+5.  World Happiness Report. *FAQ*. Retrieved July 27, 2024, from <https://worldhappiness.report/faq/>
+6.  World Happiness Report. (2024, March 12). *Appendix 1: Statistical Appendix for Chapter 2 of World Happiness Report 2024*. Retrieved July 26, 2024, from <https://happiness-report.s3.amazonaws.com/2024/Ch2+Appendix.pdf>
