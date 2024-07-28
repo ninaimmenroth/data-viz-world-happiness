@@ -1,0 +1,137 @@
+---
+title: "Data Visualization Project 2: Analysis of the World Happiness dataset"
+author: "Caroline Graebel, Nina Immenroth, Bogdan Kostić, Naim Zahari"
+format:
+  html:
+    embed-resources: true
+    number-sections: true
+    toc: true
+    toc_float: true
+editor: source
+---
+
+# data & libraries
+```{r}
+#| warning: false
+#| echo: false
+#| output: false
+
+# loading needed libraries
+library(here)
+library(tidyverse)
+library(GGally)
+library(grid)
+library(randomForest)
+library(readxl)
+```
+
+```{r}
+#| warning: false
+#| echo: false
+# loading the needed data
+whr <- read.csv(here::here("Data/WHR_AllYears.csv"))
+
+# fix data type of perception of corruption
+whr$perceptions_of_corruption <- as.numeric(whr$perceptions_of_corruption)
+
+whr_exp <- read_excel(here::here("Data/2024_Yearly_Expectations.xls"))
+
+whr_exp <- whr_exp %>% rename(country = "Country name")
+
+# match explaining data with whr data
+matched_data <- whr_exp %>%
+  inner_join(whr, by = c("year", "country"))
+
+# only keep unscaled data
+matched_data <- matched_data[,1:11]
+
+colnames(matched_data) <- c("country", "year", "life_ladder", "log_gdp_per_capita",
+                            "social_support","healthy_life_expectancy_at_birth",
+                            "freedom_to_make_life_choices", "generosity",
+                            "perceptions_of_corruption", "positive_affect",
+                            "negative affect")
+```
+
+# Variable Distributions
+
+```{r}
+#| warning: false
+#| echo: false
+#| label: fig-distro
+#| fig-cap: "Distribution graphs of the variables." 
+#| fig-scap: "Distribution graphs of variables."
+#| fig-subcap:
+#|   - "Distribution of Happiness Score"
+#|   - "Distribution of Region"
+#|   - "Distribution of GDP per Capita"
+#|   - "Distribution of Social Support"
+#|   - "Distribution of Healthy Life Expectancy"
+#|   - "Distribution of Generosity"
+#|   - "Distribution of Freedom to make Life Choices"
+#|   - "Distribution of Perceptions of Corruption"
+#|   - "Distribution of Countries per Year"
+#| layout-ncol: 2
+
+ggplot(whr, aes(x = happiness_score)) +
+  geom_freqpoly(bins = 10) +
+  ggtitle("Distribution of Happiness Score") +
+  xlab("Happiness Score") +
+  theme(text = element_text(size = 15))
+
+ggplot(whr, aes(x = region, fill = region)) +
+  geom_bar() +
+  ggtitle("Distribution of Region") +
+  xlab("Region") +
+  theme(text = element_text(size = 15),
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  guides(fill="none")
+
+ggplot(matched_data, aes(x = log_gdp_per_capita)) +
+  geom_freqpoly(bins = 10) +
+  ggtitle("Distribution of GDP per Capita") +
+  xlab("GDP per Capita") +
+  theme(text = element_text(size = 15))
+
+ggplot(matched_data, aes(x = social_support)) +
+  geom_freqpoly(bins = 10) +
+  ggtitle("Distribution of Social Support") +
+  xlab("Social Support") +
+  theme(text = element_text(size = 15))
+
+ggplot(matched_data, aes(x = healthy_life_expectancy_at_birth)) +
+  geom_freqpoly(bins = 10) +
+  ggtitle("Distribution of Healthy Life Expectancy") +
+  xlab("Healthy Life Expectancy") +
+  theme(text = element_text(size = 15))
+
+ggplot(matched_data, aes(x = generosity)) +
+  geom_freqpoly(bins = 10) +
+  ggtitle("Distribution of Generosity") +
+  xlab("Generosity") +
+  theme(text = element_text(size = 15))
+
+ggplot(matched_data, aes(x = perceptions_of_corruption)) +
+  geom_freqpoly(bins = 10) +
+  ggtitle("Distribution of Freedom to make Life Choices") +
+  xlab("Freedom to make Life Choices") +
+  theme(text = element_text(size = 15))
+
+ggplot(matched_data, aes(x = perceptions_of_corruption)) +
+  geom_freqpoly(bins = 10) +
+  ggtitle("Distribution of Perceptions of Corruption") +
+  xlab("Perceptions of Corruption") +
+  theme(text = element_text(size = 15))
+
+ggplot(whr, aes(x = year, fill = as.factor(year))) +
+  geom_bar() +
+  ggtitle("Distribution of Countries per Year") +
+  xlab("Year") +
+  theme(text = element_text(size = 15),
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  guides(fill="none")
+```
+For the distribution of numerical variables, most of them are skewed towards one side.
+GDP per capita, social support, healthy life expectancy and perceptions of corruption are left-skewed: The tip of the density curve is located on the right side of the plot, but there's a long tail for lower values. Generosity's distribution on the other hand appears to be right-skewed as there are more values for high values than for very small values. The tip of the curve is close to 0 though. The happiness score appears to to be somewhat normally distributed with 5 being the mean value of the answer scale 0 - 10.<br>
+For region, the African and European regions make up most of the data set. There is one small "Africa" bar that is explained by the Somaliland Region being assigned to Africa when first appearing in the world happiness report. This regions functions like an own country but officially belongs to Somalia which poses a corner case for assigning country and region for this country. <br>
+The distribution of countries that participated per year shows that from 2019 onwards there has been a notable decline in countries that took part in the world happiness report.
+

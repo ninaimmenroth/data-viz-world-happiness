@@ -9,7 +9,47 @@ format:
     toc_float: true
 editor: source
 ---
+```{r}
+#| echo: false
+#| output: false
+#| warning: false
 
+# loading needed libraries
+library(here)
+library(tidyverse)
+library(GGally)
+library(grid)
+library(randomForest)
+library(corrplot)
+library(readxl)
+```
+
+```{r}
+#| echo: false
+#| warning: false
+# loading the needed data
+whr <- read.csv(here::here("Data/WHR_AllYears.csv"))
+
+# fix data type of perception of corruption
+whr$perceptions_of_corruption <- as.numeric(whr$perceptions_of_corruption)
+
+whr_exp <- read_excel(here::here("Data/2024_Yearly_Expectations.xls"))
+
+whr_exp <- whr_exp %>% rename(country = "Country name")
+
+# match explaining data with whr data
+matched_data <- whr_exp %>%
+  inner_join(whr, by = c("year", "country"))
+
+# only keep unscaled data
+matched_data <- matched_data[,1:11]
+
+colnames(matched_data) <- c("country", "year", "life_ladder", "log_gdp_per_capita",
+                            "social_support","healthy_life_expectancy_at_birth",
+                            "freedom_to_make_life_choices", "generosity",
+                            "perceptions_of_corruption", "positive_affect",
+                            "negative affect")
+```
 # Background
 
 ## About the World Happiness Report
@@ -106,43 +146,91 @@ Those emotional states are respective responses to the following questions:
 
 **Dystopia** is an imaginary country that has the world’s least-happy people. The purpose in establishing Dystopia is to have a benchmark against which all countries can be favorably compared (no country performs more poorly than Dystopia) in terms of each of the six key variables, thus allowing each sub-bar to be of positive (or zero, in six instances) width. The lowest scores observed for the six key variables, therefore, characterize Dystopia.
 
-# Top Level analysis of the data
-To explore interesting structures in the data we will
-use basic variable plotting around the main variable "happiness_score" to get a first feeling for the data. Afterwards we will look into how a RandomForest Classifier model would rate the importance of variables when trying to predict the happiness score. Lastly, a Kmeans model is used to look into a possible clustering of the data and how the resulting clusters can be interpreted.
+# Variable Distributions
 
 ```{r}
+#| warning: false
 #| echo: false
-#| output: false
+#| label: fig-distributions
+#| fig-cap: "Distribution graphs of the variables." 
+#| fig-scap: "Distribution graphs of variables."
+#| fig-subcap:
+#|   - "Distribution of Happiness Score"
+#|   - "Distribution of Region"
+#|   - "Distribution of GDP per Capita"
+#|   - "Distribution of Social Support"
+#|   - "Distribution of Healthy Life Expectancy"
+#|   - "Distribution of Generosity"
+#|   - "Distribution of Freedom to make Life Choices"
+#|   - "Distribution of Perceptions of Corruption"
+#|   - "Distribution of Countries per Year"
+#| layout-ncol: 2
 
-# loading needed libraries
-library(here)
-library(tidyverse)
-library(GGally)
-library(grid)
-library(randomForest)
-library(corrplot)
-```
-
-```{r}
-#| echo: false
-# loading the needed data
-whr <- read.csv(here::here("Data/WHR_AllYears.csv"))
-```
-
-## Looking at distribution of the happiness score {#sec-distro}
-```{r}
-#| echo: false
-#| label: fig-distro
-#| fig-cap: "Distribution graph of the happiness score." 
-#| fig-scap: "Distribution graph of the happiness score."
-#| layout-ncol: 1
 ggplot(whr, aes(x = happiness_score)) +
   geom_freqpoly(bins = 10) +
   ggtitle("Distribution of Happiness Score") +
   xlab("Happiness Score") +
   theme(text = element_text(size = 15))
+
+ggplot(whr, aes(x = region, fill = region)) +
+  geom_bar() +
+  ggtitle("Distribution of Region") +
+  xlab("Region") +
+  theme(text = element_text(size = 15),
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  guides(fill="none")
+
+ggplot(matched_data, aes(x = log_gdp_per_capita)) +
+  geom_freqpoly(bins = 10) +
+  ggtitle("Distribution of GDP per Capita") +
+  xlab("GDP per Capita") +
+  theme(text = element_text(size = 15))
+
+ggplot(matched_data, aes(x = social_support)) +
+  geom_freqpoly(bins = 10) +
+  ggtitle("Distribution of Social Support") +
+  xlab("Social Support") +
+  theme(text = element_text(size = 15))
+
+ggplot(matched_data, aes(x = healthy_life_expectancy_at_birth)) +
+  geom_freqpoly(bins = 10) +
+  ggtitle("Distribution of Healthy Life Expectancy") +
+  xlab("Healthy Life Expectancy") +
+  theme(text = element_text(size = 15))
+
+ggplot(matched_data, aes(x = generosity)) +
+  geom_freqpoly(bins = 10) +
+  ggtitle("Distribution of Generosity") +
+  xlab("Generosity") +
+  theme(text = element_text(size = 15))
+
+ggplot(matched_data, aes(x = perceptions_of_corruption)) +
+  geom_freqpoly(bins = 10) +
+  ggtitle("Distribution of Freedom to make Life Choices") +
+  xlab("Freedom to make Life Choices") +
+  theme(text = element_text(size = 15))
+
+ggplot(matched_data, aes(x = perceptions_of_corruption)) +
+  geom_freqpoly(bins = 10) +
+  ggtitle("Distribution of Perceptions of Corruption") +
+  xlab("Perceptions of Corruption") +
+  theme(text = element_text(size = 15))
+
+ggplot(whr, aes(x = year, fill = as.factor(year))) +
+  geom_bar() +
+  ggtitle("Distribution of Countries per Year") +
+  xlab("Year") +
+  theme(text = element_text(size = 15),
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  guides(fill="none")
 ```
-When looking at our variable of interest, it's clearly visible that the distribution is quite close to a normal distribution.
+For the distribution of numerical variables, most of them are skewed towards one side.
+GDP per capita, social support, healthy life expectancy and perceptions of corruption are left-skewed: The tip of the density curve is located on the right side of the plot, but there's a long tail for lower values. Generosity's distribution on the other hand appears to be right-skewed as there are more values for high values than for very small values. The tip of the curve is close to 0 though. The happiness score appears to to be somewhat normally distributed with 5 being the mean value of the answer scale 0 - 10.<br>
+For region, the African and European regions make up most of the data set. There is one small "Africa" bar that is explained by the Somaliland Region being assigned to Africa when first appearing in the world happiness report. This regions functions like an own country but officially belongs to Somalia which poses a corner case for assigning country and region for this country. <br>
+The distribution of countries that participated per year shows that from 2019 onwards there has been a notable decline in countries that took part in the world happiness report.
+
+# Exploring the relationship between Happiness Score and its numerical explanatory variables
+First, through plots the relationship between happiness score and other variables is explored. Afterwards a Kmeans model is used to look into a possible clustering of the data and how the resulting clusters can be interpreted. Lastly, we will look into how a RandomForest model rates the importance of variables when trying to predict the happiness score.
 
 ## Looking into relationship of the happiness score to predictors {#sec-rel-pred}
 
@@ -223,8 +311,6 @@ whr |>
   theme(text = element_text(size = 15))
 
 # Perceptions of corruption
-# fix data type of perceptions of corruption
-whr$perceptions_of_corruption <- as.numeric(whr$perceptions_of_corruption)
 whr |>
   ggplot(aes(x = perceptions_of_corruption, y = happiness_score)) +
   geom_point() +
@@ -243,7 +329,6 @@ whr |>
 
 #remove non-numeric variables
 whr_num <- whr[, c(3,4,5,6,7,8,9,10)]
-whr_num$perceptions_of_corruption <- as.numeric(whr_num$perceptions_of_corruption)
 whr_num$year <- as.numeric(whr_num$year)
 
 # remove NaN values
