@@ -1,0 +1,269 @@
+---
+title: "Data Visualization Project 2: Analysis of the World Happiness dataset"
+author: "Caroline Graebel, Nina Immenroth, Bogdan Kostić, Naim Zahari"
+format:
+  html:
+    embed-resources: true
+    number-sections: true
+    toc: true
+    toc_float: true
+editor: source
+---
+```{r}
+#| warning: false
+#| echo: false
+#| output: false
+
+# loading needed libraries
+library(here)
+library(tidyverse)
+library(GGally)
+library(grid)
+library(randomForest)
+library(readxl)
+library(RColorBrewer)
+```
+
+```{r}
+#| warning: false
+#| echo: false
+# loading the needed data
+whr <- read.csv(here::here("Data/WHR_AllYears.csv"))
+
+# fix data type of perception of corruption
+whr$perceptions_of_corruption <- as.numeric(whr$perceptions_of_corruption)
+
+whr_exp <- read_excel(here::here("Data/2024_Yearly_Expectations.xls"))
+
+whr_exp <- whr_exp %>% rename(country = "Country name")
+
+# match explaining data with whr data
+matched_data <- whr_exp %>%
+  inner_join(whr, by = c("year", "country"))
+
+# only keep unscaled data
+matched_data <- matched_data[,1:11]
+
+colnames(matched_data) <- c("country", "year", "life_ladder", "log_gdp_per_capita",
+                            "social_support","healthy_life_expectancy_at_birth",
+                            "freedom_to_make_life_choices", "generosity",
+                            "perceptions_of_corruption", "positive_affect",
+                            "negative affect")
+```
+
+# Top and Bottom 10 Ranking of Countries in Predictor Variables
+```{r}
+#| warning: false
+#| echo: false
+countries_df <- whr |>
+  group_by(country) |>
+  summarize_if(is.numeric, mean)
+
+save_region <- whr[,1:2] |>
+  arrange(country) |>
+  distinct(country, .keep_all = TRUE)
+  
+countries_df$region <- save_region$region  
+```
+
+
+```{r}
+#| warning: false
+#| echo: false
+#| label: fig-ranking1
+#| fig-cap: "Top and bottom ranking of countries over predictors coloured by region." 
+#| fig-scap: "Top and bottom ranking of countries over predictors coloured by region."
+#| fig-subcap:
+#|   - "Top 10 countries: GDP per Capita"
+#|   - "Bottom 10 countries: GDP per Capita"
+#|   - "Top 10 countries: Social Support"
+#|   - "Bottom 10 countries: Social Support"
+#|   - "Top 10 countries: Healthy Life Expectancy"
+#|   - "Bottom 10 countries: Healthy Life Expectancy"
+#|   - "Top 10 countries: Generosity"
+#|   - "Bottom 10 countries: Generosity"
+#|   - "Top 10 countries: Freedom to make Life Choices"
+#|   - "Bottom 10 countries: Freedom to make Life Choices"
+#|   - "Top 10 countries: Perceptions of Corruption"
+#|   - "Bottom 10 countries: Perceptions of Corruption"
+#| layout-ncol: 2
+
+# set a fixed colour scale over 11 regions
+my_colors <- brewer.pal(11, "Paired")
+colors_df <- data.frame(
+  category = levels(as.factor(whr$region)),
+  color = my_colors)
+
+# GDP per capita
+countries_df |>
+  arrange(desc(gdp_per_capita)) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, gdp_per_capita), y = gdp_per_capita, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("GDP per Capita") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+countries_df |>
+  arrange(gdp_per_capita) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, gdp_per_capita), y = gdp_per_capita, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("GDP per Capita") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+# Social Support
+countries_df |>
+  arrange(desc(social_support)) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, social_support), y = social_support, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Social Support") +
+  ylab("Countries") + 
+  theme(text = element_text(size = 13))
+
+countries_df |>
+  arrange(social_support) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, social_support), y = social_support, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Social Support") +
+  ylab("Countries") + 
+  theme(text = element_text(size = 13))
+
+# Healthy Life Expectancy
+countries_df |>
+  arrange(desc(healthy_life_expectancy)) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, healthy_life_expectancy), y = healthy_life_expectancy, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Healthy Life Expectancy") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+countries_df |>
+  arrange(healthy_life_expectancy) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, healthy_life_expectancy), y = healthy_life_expectancy, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Healthy Life Expectancy") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+# Generosity
+countries_df |>
+  arrange(desc(generosity)) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, generosity), y = generosity, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Generosity") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+countries_df |>
+  arrange(generosity) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, generosity), y = generosity, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Generosity") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+# Freedom to make Life Choices
+countries_df |>
+  arrange(desc(freedom_to_make_life_choices)) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, freedom_to_make_life_choices), y = freedom_to_make_life_choices, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Freedom to make Life Choices") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+countries_df |>
+  arrange(freedom_to_make_life_choices) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, freedom_to_make_life_choices), y = freedom_to_make_life_choices, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Freedom to make Life Choices") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+# Perceptions of Corruption
+countries_df |>
+  arrange(desc(perceptions_of_corruption)) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, perceptions_of_corruption), y = perceptions_of_corruption, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Perceptions of Corruption") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+countries_df |>
+  arrange(perceptions_of_corruption) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, perceptions_of_corruption), y = perceptions_of_corruption, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Perceptions of Corruption") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+```
+# Top and Bottom 10 Ranking of Countries for Happiness Score
+```{r}
+#| warning: false
+#| echo: false
+#| label: fig-ranking2
+#| fig-cap: "Top and bottom ranking of countries for happiness score coloured by region." 
+#| fig-scap: "Top and bottom ranking of countries for happiness score coloured by region."
+#| fig-subcap:
+#|   - "Top 10 countries: Happiness Score"
+#|   - "Bottom 10 countries: Happiness Score"
+#| layout-ncol: 2
+
+countries_df |>
+  arrange(desc(happiness_score)) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, happiness_score), y = happiness_score, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("GDP per Capita") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+countries_df |>
+  arrange(happiness_score) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, happiness_score), y = happiness_score, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("GDP per Capita") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+```
+
