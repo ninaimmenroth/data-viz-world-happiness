@@ -22,6 +22,7 @@ library(grid)
 library(randomForest)
 library(corrplot)
 library(readxl)
+library(cowplot)
 ```
 
 ```{r}
@@ -89,6 +90,10 @@ For the analysis, RStudio Desktop environment was used. The following packages w
 -   `randomForest`
 
 -   `corrplot`
+
+-   `readxl`
+
+-   `cowplot`
 
 Functions from these packages were used to conduct the analysis, with the following functions being particularly important:
 
@@ -268,55 +273,69 @@ Regions is understood as an aggregation for the variable country, as there are a
 #|   - "Happiness Score over Freedom to make Life Choices"
 #|   - "Happiness Score over Generosity"
 #|   - "Happiness Score over Perceptions of Corruption"
+#|   - "Legend"
 #| layout-ncol: 2
 
 # GDP per capita plot
 whr |>
-  ggplot(aes(x = gdp_per_capita, y = happiness_score)) +
+  ggplot(aes(x = gdp_per_capita, y = happiness_score, color = region)) +
   geom_point() +
   xlab("GDP per Capita") +
   ylab("Happiness Score") +
-  theme(text = element_text(size = 15))
+  theme(text = element_text(size = 15), legend.position = "none")
 
 # Social Support Plot
 whr |>
-  ggplot(aes(x = social_support, y = happiness_score)) +
+  ggplot(aes(x = social_support, y = happiness_score, color = region)) +
   geom_point() +
   xlab("Social Support") +
   ylab("Happiness Score") +
-  theme(text = element_text(size = 15))
+  theme(text = element_text(size = 15), legend.position = "none")
 
 # Healthy Life Expectancy plot
 whr |>
-  ggplot(aes(x = healthy_life_expectancy, y = happiness_score)) +
+  ggplot(aes(x = healthy_life_expectancy, y = happiness_score, color = region)) +
   geom_point() +
   xlab("Healthy Life Expectancy") +
   ylab("Happiness Score") +
-  theme(text = element_text(size = 15))
+  theme(text = element_text(size = 15), legend.position = "none")
 
 # Freedom to make life choices
 whr |>
-  ggplot(aes(x = freedom_to_make_life_choices, y = happiness_score)) +
+  ggplot(aes(x = freedom_to_make_life_choices, y = happiness_score, color = region)) +
   geom_point() +
   xlab("Freedom to make Life Choices") +
   ylab("Happiness Score") +
-  theme(text = element_text(size = 15))
+  theme(text = element_text(size = 15), legend.position = "none")
 
 # Generosity
 whr |>
-  ggplot(aes(x = generosity, y = happiness_score)) +
+  ggplot(aes(x = generosity, y = happiness_score, color = region)) +
   geom_point() +
   xlab("Generosity") +
   ylab("Happiness Score") +
-  theme(text = element_text(size = 15))
+  theme(text = element_text(size = 15), legend.position = "none")
 
 # Perceptions of corruption
 whr |>
-  ggplot(aes(x = perceptions_of_corruption, y = happiness_score)) +
+  ggplot(aes(x = perceptions_of_corruption, y = happiness_score, color = region)) +
   geom_point() +
   xlab("Perceptions of corruption") +
   ylab("Happiness Score") +
-  theme(text = element_text(size = 15))
+  theme(text = element_text(size = 15), legend.position = "none")
+
+# Get the legend
+scatter_plot <- whr |>
+  ggplot(aes(x = gdp_per_capita, y = happiness_score, color = region)) +
+  geom_point() +
+  xlab("GDP per Capita") +
+  ylab("Happiness Score") +
+  theme(text = element_text(size = 25), legend.position = "right")+
+  guides(color = guide_legend(override.aes = list(size = 5)))
+
+# Extract the legend
+legend = get_plot_component(scatter_plot, 'guide-box-right', return_all = TRUE)
+ggdraw(legend)
 
 ```
 
