@@ -37,6 +37,10 @@ perc <- pr.out$sdev/sum(pr.out$sdev)
 
 ```{r}
 #| echo: false
+#| label: fig-pca-cum
+#| fig-cap: "Cumulative Propability of the Variance explained by each Principle Component." 
+#| fig-scap: "Cumulative Propability of the Variance explained by each Principle Component."
+#| layout-ncol: 1
 # plot cumulative sum of the percentages
 plot(cumsum(perc),
   xlab = "Principal Component",
@@ -67,8 +71,13 @@ for (k in 2:7) {
 
 ```{r}
 #| echo: false
+#| label: fig-wss-plot
+#| fig-cap: "Optimal k-value for Kmeans algorithm when applying the elbow-criterium to the within sum of squares plot with marked cut-off value of k = 2." 
+#| fig-scap: "Optimal k-value for Kmeans algorithm when applying the elbow-criterium to the within sum of squares plot with marked cut-off value of k = 2."
+#| layout-ncol: 1
 # plot the resulting values
 plot(wss, xlab = "k", ylab = "WSS", type = "b", main = "Within sum of squares over different amounts of clusters")
+abline(v = 2, col = "red", lty = 2)
 ```
 Using the elbow criterium, it can be seen that after k = 2, the decrease of within sum of squares isn't as strong anymore. Therefore, the final K-Means model is trained with two clusters.
 
@@ -88,6 +97,10 @@ my.text.panel <- function(labels) {
 
 ```{r fig.width=10, fig.height=10}
 #| echo: false
+#| label: fig-k-means-plot
+#| fig-cap: "Matrix of scatterplots coloured by cluster." 
+#| fig-scap: "Matrix of scatterplots coloured by cluster."
+#| layout-ncol: 1
 # plot resulting clustering
 pairs(sc_whr, col = km.out$cluster, upper.panel = NULL, gap = 0,
       main = "Matrix of scatterplots coloured by cluster",
@@ -113,6 +126,10 @@ For further context, the median value of the happiness score is almost perfectly
 When training a random forest on data, multiple trees are fitted on random subset of predictors in each iteration. The resulting plot provides two different types of variable importance which means how much a variable is contributing to improving the model.
 ```{r fig.width = 10}
 #| echo: false
+#| label: fig-randomforest
+#| fig-cap: "Variable importance when predicting the happiness score with a random forest model." 
+#| fig-scap: "Variable importance when predicting the happiness score with a random forest model."
+#| layout-ncol: 1
 # create a version of whr that contains all variables but no NAs
 whr_noNA <- na.omit(whr)
 
