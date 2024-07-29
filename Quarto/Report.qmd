@@ -260,7 +260,7 @@ ggplot(whr, aes(x = year, fill = as.factor(year))) +
 
 @fig-distributions shows the distributions of numerical variables, for all of the plots except a, b and i, the original data from the Gallup World Poll (see @sec-GWP-data) is used in order to see the true distributions and not the scaled ones that were calculated for the World Happiness Report.
 
-Most of the distributions are skewed towards one side. GDP per capita, social support, healthy life expectancy and perceptions of corruption are left-skewed: The tip of the density curve is located on the right side of the plot, but there's a long tail for lower values. Generosity's distribution on the other hand appears to be right-skewed as there are more values for high values than for very low values. The tip of the curve is close to 0 on the negative side though. The happiness score appears to to be somewhat normally distributed with 5.44 being the mean value of the answer scale 0 - 10.<br> For region, the African and European regions make up most of the data set. There is one small "Africa" bar that is explained by the Somaliland Region being assigned to Africa when first appearing in the world happiness report. This region functions like an own country but officially belongs to Somalia which poses a corner case for assigning country and region for this country. <br> The distribution of countries that participated per year shows that from 2019 onwards there has been a notable decline in countries that took part in the world happiness report.
+Most of the distributions are skewed towards one side. GDP per capita, social support, healthy life expectancy and perceptions of corruption are left-skewed: The tip of the density curve is located on the right side of the plot, but there is a long tail for lower values. Generosity's distribution on the other hand appears to be right-skewed as there are more values for high values than for very low values. The tip of the curve is close to 0 on the negative side though. The happiness score appears to to be somewhat normally distributed with 5.44 being the mean value of the answer scale 0 - 10.<br> For region, the African and European regions make up most of the data set. There is one small "Africa" bar that is explained by the Somaliland Region being assigned to Africa when first appearing in the world happiness report. This region functions like an own country but officially belongs to Somalia which poses a corner case for assigning country and region for this country. <br> The distribution of countries that participated per year shows that from 2019 onwards there has been a notable decline in countries that took part in the world happiness report.
 
 # Exploring the relationship between Happiness Score and its numerical explanatory variables
 
@@ -371,12 +371,12 @@ ggdraw(legend)
 ```{r}
 #| echo: false
 #| label: fig-corr-mat
-#| fig-cap: "Correlation matrix plot." 
-#| fig-scap: "Correlation matrix plot."
+#| fig-cap: "Correlation matrix plot. HS = Happiness Score, GpC = GDP per Capita, SS = Social Support, HLE = Healthy Life Expectancy , FtmLC = Freedom to make life choices, G = Generosity, PoC = Perception of Corruption, Y = Year."
+#| fig-scap: "Correlation matrix plot. HS = Happiness Score, GpC = GDP per Capita, SS = Social Support, HLE = Healthy Life Expectancy , FtmLC = Freedom to make life choices, G = Generosity, PoC = Perception of Corruption, Y = Year."
 #| layout-ncol: 1
 
 #remove non-numeric variables
-whr_num <- whr[, c(3,4,5,6,7,8,9,10)]
+whr_num <- whr[, c(3,4,5,6,7,8,9,10)]ƒ
 whr_num$year <- as.numeric(whr_num$year)
 
 # remove NaN values
@@ -420,7 +420,7 @@ Similar to GDP per Capita, there is a positive linear relationship between both 
 cat("Correlation of the happiness score and social support:",cor(whr$social_support, whr$happiness_score))
 ```
 
-The correlation between social support and happiness score isn't as strong as for GDP per capita but still very strong.
+The correlation between social support and happiness score is not as strong as for GDP per capita but still very strong.
 
 ### Healthy life expectancy
 
@@ -431,7 +431,7 @@ Here, we again have a positive linear relationship between the two variables. In
 cat("Correlation of the happiness score and healthy life expectancy:",cor(whr$healthy_life_expectancy, whr$happiness_score, use = "complete.obs"))
 ```
 
-There a strong positive correlation between healthy life expectancy and the happiness score.
+There is a strong positive correlation between healthy life expectancy and the happiness score.
 
 ### Freedom to make life choices
 
@@ -450,7 +450,7 @@ There is no connection between the variables visible here.
 
 ### Perceptions of corruption
 
-For perceptions of corruption, there seems to be a slight upward trend in happiness score for higher perceptions of corruption but it's only a fraction of data points that score high on perceptions of corruption. Also there is missing data for this variable.
+For perceptions of corruption, there seems to be a slight upward trend in happiness score for higher perceptions of corruption but it is only a fraction of data points that score high on perceptions of corruption. Also there is missing data for this variable.
 
 ```{r}
 #| echo: false
@@ -478,7 +478,7 @@ whr |>
   ylab("Happiness Score")
 ```
 
-For medians, there is a slight upwards trend over the years, which 2020 to 2022 having little variance compared to the other years. There are also negative outliers for 2021 to 2023.
+For medians, there is a slight upwards trend over the years, with 2020 to 2022 having little variance compared to the other years. There are also negative outliers for 2021 to 2023.
 
 # Using K-means Clustering to find interesting patterns
 
@@ -499,7 +499,7 @@ whr_sub <- whr[,-c(1,2,10)]
 whr_sub <- na.omit(whr_sub)
 ```
 
-A good measure for improving the performance of K-Means is doing PCA on the data as it can aggregate the information. However, PCA is only useful if you can cover around 80% of the data with only few principle components.
+A good measure for improving the performance of K-Means is doing PCA on the data as it can aggregate the information. However, PCA is only useful if you can cover around 80% of the total variance of the data with only few principle components.
 
 ```{r}
 #| echo: false
@@ -523,11 +523,11 @@ plot(cumsum(perc),
   type = "b")
 ```
 
-As can be seen, it would be necessary to use four to five of seven variables to cover a sufficient amount of variance. Since this isn't too helpful and each principle component contains a similar amount of variance, PCA isn't applied.
+As can be seen, it would be necessary to use four to five of seven variables to cover a sufficient amount of variance. Since this is not too helpful and each principle component contains a similar amount of variance, PCA is not applied.
 
 ## Finding a good amount of clusters
 
-In general, the higher the number of clusters, the more similar points will be within one cluster. However, the model also gets harder to interpret and messy. So using the elbow-criterium, the hyperparameter k that equals the number of clusters should be sensibly minimized so that we get an interpretable result. <br> To find k, the total within sum of squares for two to ten clusters is calculated and plotted.
+In general, the higher the number of clusters, the more similar the points will be within one cluster. However, the model also gets harder to interpret and messy. Therefore, using the elbow-criterion, the hyperparameter k that equals the number of clusters should be sensibly minimized so that we get an interpretable result. <br> To find k, the total within sum of squares for two to ten clusters is calculated and plotted.
 
 ```{r}
 #| echo: false
@@ -547,15 +547,15 @@ for (k in 2:7) {
 ```{r}
 #| echo: false
 #| label: fig-wss-plot
-#| fig-cap: "Optimal k-value for Kmeans algorithm when applying the elbow-criterium to the within sum of squares plot with marked cut-off value of k = 2." 
-#| fig-scap: "Optimal k-value for Kmeans algorithm when applying the elbow-criterium to the within sum of squares plot with marked cut-off value of k = 2."
+#| fig-cap: "Optimal k-value for Kmeans algorithm when applying the elbow-criterion to the within sum of squares plot with marked cut-off value of k = 2." 
+#| fig-scap: "Optimal k-value for Kmeans algorithm when applying the elbow-criterion to the within sum of squares plot with marked cut-off value of k = 2."
 #| layout-ncol: 1
 # plot the resulting values
 plot(wss, xlab = "k", ylab = "WSS", type = "b", main = "Within sum of squares over different amounts of clusters")
 abline(v = 2, col = "red", lty = 2)
 ```
 
-After k = 2 the decrease of within sum of squares isn't as strong anymore. Therefore, the K-Means model is trained with two clusters.
+After k = 2 the decrease of within sum of squares is not as strong anymore. Therefore, the K-Means model is trained with two clusters.
 
 ## Resulting plots
 
@@ -624,7 +624,7 @@ rf.whr <- randomForest(happiness_score ~ ., data = whr_noNA, mtry = 3, ntree = 1
 varImpPlot(rf.whr, scale = FALSE, main = "Feature Importance for predicting Happiness Score")
 ```
 
-The left plot shows how much a variable contributes to decreasing the mean squared error of the resulting model. The mean squared error measures the difference between the true values and predictions. The variables are ordered by how much the variables increase the mean squared error when being left out. From this example, GDP per capita improves the tree by lowering the MSE the most and vice versa - when it is missing, the MSE is a lot higher. <br> Node Purity on the other hand represents how well the tree splits the data in similar target values. The more often variable is used for splitting a node in two further branches, the more important is the variable. In this plot GDP per capita again ranks highest, which means that it provides a useful condition on which to split groups. <br> When predicting the happiness score, GDP per capita and healthy life expectancy are ranked the highest for both importancy measures. This coincides with the high correlations that have been measured for the scatterplots between happiness score and the two variables. <br> An important thing to keep in mind is that there's an element of randomness in these results. For different seeds, the top four variables are stable, but how important they are and their ranking can be different. It also should be noted at an increased MSE of 20% for example freedom to make life choices is still a strong impact, even if this variable appears of low rank compared to others.
+The left plot shows how much a variable contributes to decreasing the mean squared error of the resulting model. The mean squared error measures the difference between the true values and predictions. The variables are ordered by how much the variables increase the mean squared error when being left out. From this example, GDP per capita improves the tree by lowering the MSE the most and vice versa - when it is missing, the MSE is a lot higher. <br> Node Purity on the other hand represents how well the tree splits the data in similar target values. The more often variable is used for splitting a node in two further branches, the more important is the variable. In this plot GDP per capita again ranks highest, which means that it provides a useful condition on which to split groups. <br> When predicting the happiness score, GDP per capita and healthy life expectancy are ranked the highest for both importancy measures. This coincides with the high correlations that have been measured for the scatterplots between happiness score and the two variables. <br> An important thing to keep in mind is that there is an element of randomness in these results. For different seeds, the top four variables are stable, but how important they are and their ranking can be different. It also should be noted at an increased MSE of 20% for example freedom to make life choices is still a strong impact, even if this variable appears of low rank compared to others.
 
 # Discussion
 
