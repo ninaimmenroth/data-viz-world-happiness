@@ -1,5 +1,5 @@
 ---
-title: "Data Visualization Project 2: Analysis of the World Happiness dataset"
+title: "Data Visualization Project 2: Analysis of the World Happiness Dataset"
 author: "Caroline Graebel, Nina Immenroth, Bogdan Kostić, Naim Zahari"
 format:
   html:
@@ -24,6 +24,10 @@ library(randomForest)
 library(corrplot)
 library(readxl)
 library(cowplot)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(plotly)
+library(RColorBrewer)
 ```
 
 ```{r}
@@ -96,6 +100,10 @@ For the analysis, RStudio Desktop environment was used. The following packages w
 -   `readxl`
 
 -   `cowplot`
+
+-   `rnaturalearth`
+
+-   `plotly`
 
 Functions from these packages were used to conduct the analysis, with the following functions being particularly important:
 
@@ -262,11 +270,72 @@ ggplot(whr, aes(x = year, fill = as.factor(year))) +
 
 Most of the distributions are skewed towards one side. GDP per capita, social support, healthy life expectancy and perceptions of corruption are left-skewed: The tip of the density curve is located on the right side of the plot, but there is a long tail for lower values. Generosity's distribution on the other hand appears to be right-skewed as there are more values for high values than for very low values. The tip of the curve is close to 0 on the negative side though. The happiness score appears to to be somewhat normally distributed with 5.44 being the mean value of the answer scale 0 - 10.<br> For region, the African and European regions make up most of the data set. There is one small "Africa" bar that is explained by the Somaliland Region being assigned to Africa when first appearing in the world happiness report. This region functions like an own country but officially belongs to Somalia which poses a corner case for assigning country and region for this country. <br> The distribution of countries that participated per year shows that from 2019 onwards there has been a notable decline in countries that took part in the world happiness report.
 
+## Distribution of the Happiness Score around the globe
+```{r}
+#| echo: false
+#| warning: false
+#| label: fig-world-map
+#| fig-cap: "Heatmap of the Happiness Score around the globe based on the latest available data. Grey areas indicate countries where data is not available." 
+#| fig-scap: "Heatmap of the Happiness Score around the globe based on the latest available data. Grey areas indicate countries where data is not available." 
+
+# Filter data for the latest year
+latest_year <- max(whr$year)
+latest_data <- whr %>% filter(year == latest_year)
+
+# Get the world map data
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+# Correct country names in the data to match those in the world map data
+latest_data$country <- recode(latest_data$country,
+                              "United States" = "United States of America",
+                              "Taiwan Province of China" = "Taiwan",
+                              "Bosnia and Herzegovina" = "Bosnia and Herz.",
+                              "Dominican Republic" = "Dominican Rep.",
+                              "Hong Kong S.A.R. of China" = "Hong Kong",
+                              "Congo (Brazzaville)" = "Congo",
+                              "Ivory Coast" = "Côte d'Ivoire",
+                              "State of Palestine" = "Palestine",
+                              "Turkiye" = "Turkey",
+                              "Congo (Kinshasa)" = "Dem. Rep. Congo")
+
+# Merge the happiness data with the world map data
+world_data <- world %>%
+  left_join(latest_data, by = c("name" = "country"))
+
+# Create the heatmap with ggplot
+p <- ggplot(data = world_data) +
+  geom_sf(aes(fill = happiness_score, text = paste("Country:", name, "<br>Happiness Score:", happiness_score))) +
+  scale_fill_viridis_c(na.value = "grey50") +
+  labs(title = "World Happiness Map",
+       fill = "Happiness Score") +
+  theme_minimal() +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_blank())
+
+# Convert ggplot to plotly for interactivity
+plotly_map <- ggplotly(p, tooltip = "text")
+
+# Adjust the size of the plot
+plotly_map <- plotly_map %>% layout(width = 850)
+
+plotly_map
+```
+
+@fig-world-map is a heatmap visualizing the happiness score around the globe based on the latest available data. The distribution of happiness scores worldwide shows clear regional patterns. Happiness scores tend to be higher in North America, Western Europe and Oceania, as indicated by the lighter colors in these regions. Countries such as Finland, which is known as the happiest country in the world with a happiness score of 7.8, are located in this region and have the highest happiness scores. This is particularly visible in Scandinavia and other parts of Northern Europe.
+
+In severe contrast are regions such as Sub-Saharan Africa and South Asia, where happiness scores are significantly lower, as indicated by the darker colors on the map. Afghanistan is the country with the lowest happiness score with a score of 1.9 and is located in South Asia, which can also be seen on the map by the darker colors.
+
+Other interesting patterns can be observed in Latin America and Eastern Europe, where the happiness scores are medium to high. In these regions, the scores are more variable, indicating a mix of countries with different socio-economic conditions.
+
+Overall, the map shows that the highest happiness scores are mainly found in wealthy and developed countries, while the lowest scores occur in regions with economic and social challenges. This global distribution of happiness scores illustrates the strong regional differences in perceived well-being and suggests the significance of socio-economic factors for individual happiness.
+
 # Exploring the relationship between Happiness Score and its numerical explanatory variables
 
 First, through plots the relationship between happiness score and other variables is explored. Afterwards a Kmeans model is used to look into a possible clustering of the data and how the resulting clusters can be interpreted. Lastly, we will look into how a RandomForest model rates the importance of variables when trying to predict the happiness score.
 
-## Looking into relationship of the happiness score to predictors {#sec-rel-pred}
+## Looking into the relationship between the happiness score and predictors {#sec-rel-pred}
 
 ### Region
 
@@ -376,7 +445,7 @@ ggdraw(legend)
 #| layout-ncol: 1
 
 #remove non-numeric variables
-whr_num <- whr[, c(3,4,5,6,7,8,9,10)]ƒ
+whr_num <- whr[, c(3,4,5,6,7,8,9,10)]
 whr_num$year <- as.numeric(whr_num$year)
 
 # remove NaN values
@@ -479,6 +548,222 @@ whr |>
 ```
 
 For medians, there is a slight upwards trend over the years, with 2020 to 2022 having little variance compared to the other years. There are also negative outliers for 2021 to 2023.
+
+# Top and Bottom 10 Ranking of Countries in Predictor Variables
+```{r}
+#| warning: false
+#| echo: false
+countries_df <- whr |>
+  group_by(country) |>
+  summarize_if(is.numeric, mean)
+
+save_region <- whr[,1:2] |>
+  arrange(country) |>
+  distinct(country, .keep_all = TRUE)
+  
+countries_df$region <- save_region$region  
+```
+
+
+```{r}
+#| warning: false
+#| echo: false
+#| label: fig-ranking1
+#| fig-cap: "Top and bottom ranking of countries over predictors coloured by region." 
+#| fig-scap: "Top and bottom ranking of countries over predictors coloured by region."
+#| fig-subcap:
+#|   - "Top 10 countries: GDP per Capita"
+#|   - "Bottom 10 countries: GDP per Capita"
+#|   - "Top 10 countries: Social Support"
+#|   - "Bottom 10 countries: Social Support"
+#|   - "Top 10 countries: Healthy Life Expectancy"
+#|   - "Bottom 10 countries: Healthy Life Expectancy"
+#|   - "Top 10 countries: Generosity"
+#|   - "Bottom 10 countries: Generosity"
+#|   - "Top 10 countries: Freedom to make Life Choices"
+#|   - "Bottom 10 countries: Freedom to make Life Choices"
+#|   - "Top 10 countries: Perceptions of Corruption"
+#|   - "Bottom 10 countries: Perceptions of Corruption"
+#| layout-ncol: 2
+
+# set a fixed colour scale over 11 regions
+my_colors <- brewer.pal(11, "Paired")
+colors_df <- data.frame(
+  category = levels(as.factor(whr$region)),
+  color = my_colors)
+
+# GDP per capita
+countries_df |>
+  arrange(desc(gdp_per_capita)) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, gdp_per_capita), y = gdp_per_capita, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("GDP per Capita") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+countries_df |>
+  arrange(gdp_per_capita) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, gdp_per_capita), y = gdp_per_capita, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("GDP per Capita") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+# Social Support
+countries_df |>
+  arrange(desc(social_support)) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, social_support), y = social_support, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Social Support") +
+  ylab("Countries") + 
+  theme(text = element_text(size = 13))
+
+countries_df |>
+  arrange(social_support) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, social_support), y = social_support, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Social Support") +
+  ylab("Countries") + 
+  theme(text = element_text(size = 13))
+
+# Healthy Life Expectancy
+countries_df |>
+  arrange(desc(healthy_life_expectancy)) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, healthy_life_expectancy), y = healthy_life_expectancy, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Healthy Life Expectancy") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+countries_df |>
+  arrange(healthy_life_expectancy) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, healthy_life_expectancy), y = healthy_life_expectancy, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Healthy Life Expectancy") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+# Generosity
+countries_df |>
+  arrange(desc(generosity)) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, generosity), y = generosity, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Generosity") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+countries_df |>
+  arrange(generosity) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, generosity), y = generosity, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Generosity") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+# Freedom to make Life Choices
+countries_df |>
+  arrange(desc(freedom_to_make_life_choices)) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, freedom_to_make_life_choices), y = freedom_to_make_life_choices, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Freedom to make Life Choices") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+countries_df |>
+  arrange(freedom_to_make_life_choices) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, freedom_to_make_life_choices), y = freedom_to_make_life_choices, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Freedom to make Life Choices") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+# Perceptions of Corruption
+countries_df |>
+  arrange(desc(perceptions_of_corruption)) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, perceptions_of_corruption), y = perceptions_of_corruption, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Perceptions of Corruption") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+countries_df |>
+  arrange(perceptions_of_corruption) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, perceptions_of_corruption), y = perceptions_of_corruption, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("Perceptions of Corruption") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+```
+# Top and Bottom 10 Ranking of Countries for Happiness Score
+```{r}
+#| warning: false
+#| echo: false
+#| label: fig-ranking2
+#| fig-cap: "Top and bottom ranking of countries for happiness score coloured by region." 
+#| fig-scap: "Top and bottom ranking of countries for happiness score coloured by region."
+#| fig-subcap:
+#|   - "Top 10 countries: Happiness Score"
+#|   - "Bottom 10 countries: Happiness Score"
+#| layout-ncol: 2
+
+countries_df |>
+  arrange(desc(happiness_score)) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, happiness_score), y = happiness_score, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("GDP per Capita") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+
+countries_df |>
+  arrange(happiness_score) |>
+  slice_head(n = 10) |>
+  ggplot() +
+  geom_col(aes(x = reorder(country, happiness_score), y = happiness_score, fill = region)) +
+  coord_flip() +
+  scale_fill_manual(values = colors_df$color) +
+  xlab("GDP per Capita") +
+  ylab("Countries") +
+  theme(text = element_text(size = 13))
+```
 
 # Using K-means Clustering to find interesting patterns
 
