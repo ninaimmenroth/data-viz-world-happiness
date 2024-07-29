@@ -165,6 +165,7 @@ Those emotional states are respective responses to the following questions:
 **Dystopia** is an imaginary country that has the world’s least-happy people. The purpose in establishing Dystopia is to have a benchmark against which all countries can be favorably compared (no country performs more poorly than Dystopia) in terms of each of the six key variables, thus allowing each sub-bar to be of positive (or zero, in six instances) width. The lowest scores observed for the six key variables, therefore, characterize Dystopia.
 
 # Variable Distributions {#sec-distro}
+## Distributions of happiness score and the explanatory variables
 
 ```{r}
 #| warning: false
@@ -271,7 +272,7 @@ ggplot(whr, aes(x = year, fill = as.factor(year))) +
 
 Most of the distributions are skewed towards one side. GDP per capita, social support, healthy life expectancy and perceptions of corruption are left-skewed: The tip of the density curve is located on the right side of the plot, but there is a long tail for lower values. Generosity's distribution on the other hand appears to be right-skewed as there are more values for high values than for very low values. The tip of the curve is close to 0 on the negative side though. The happiness score appears to to be somewhat normally distributed with 5.44 being the mean value of the answer scale 0 - 10.<br> For region, the African and European regions make up most of the data set. There is one small "Africa" bar that is explained by the Somaliland Region being assigned to Africa when first appearing in the world happiness report. This region functions like an own country but officially belongs to Somalia which poses a corner case for assigning country and region for this country. <br> The distribution of countries that participated per year shows that from 2019 onwards there has been a notable decline in countries that took part in the world happiness report.
 
-## Distribution of the Happiness Score around the globe
+## Distribution of the Happiness Score around the globe {#sec-distro-globe}
 ```{r}
 #| echo: false
 #| warning: false
@@ -336,14 +337,13 @@ Other interesting patterns can be observed in Latin America and Eastern Europe, 
 
 Overall, the map shows that the highest happiness scores are mainly found in wealthy and developed countries, while the lowest scores occur in regions with economic and social challenges. This global distribution of happiness scores illustrates the strong regional differences in perceived well-being and suggests the significance of socio-economic factors for individual happiness.
 
-# Exploring the relationship between Happiness Score and its numerical explanatory variables
+# Exploring the relationship between Happiness Score and its numerical explanatory variables {#sec-rel-pred}
 
-First, through plots the relationship between happiness score and other variables is explored. Afterwards a Kmeans model is used to look into a possible clustering of the data and how the resulting clusters can be interpreted. Lastly, we will look into how a RandomForest model rates the importance of variables when trying to predict the happiness score.
+First, through plots the relationship between happiness score and other variables is explored. Afterwards a Kmeans model is used to look into a possible clustering of the data and how the resulting clusters can be interpreted. Lastly, we will look into how a RandomForest model rates the importance of variables when trying to predict the happiness score.<span style="color:red">Move this to beginning of main part and edit.</span>
 
-## Looking into the relationship between the happiness score and predictors {#sec-rel-pred}
+In this section the influence of the explanatory variables and the regions on the happiness score is explored. The box plots of happiness score over different regions highlights the differences over the globe which are already recognizable in sec-distro-globe. In order to find out what makes humans most happy, the correlations between the variables and the happiness score can give some indication. This is emphasized by scatter plots which also show the different regions' influences on these correlations.
 
-### Region
-
+## Influence of region on the happiness score
 ```{r}
 #| echo: false
 #| label: fig-box-regions
@@ -355,19 +355,20 @@ whr |>
   geom_boxplot() +
   theme(legend.position = "none",
         axis.title.y = element_blank(),
-        text = element_text(size = 14))+
-  ggtitle("Happiness Score over different regions") +
+        text = element_text(size = 14)) +
   ylab("Happiness Score") +
   coord_flip()
 ```
 
-When looking at how the happiness score is connected to the regions of the countries we have data for, we can see that they differ a lot in their spread. Western Europe and North America and ANZ have the comparatively highest median happiness scores. In contrast, for Sub-Saharan Africa and South Asia the median happiness is the lowest. The regions also differ strongly in the variance. The interquartile range (the range of variables within the first and third quarter percentiles) is larger in the Middle East and North Africa while for Africa and North America the boxes are very small. <br> Regions is understood as an aggregation for the variable country, as there are a big number of countries covered that it is not possible to visualize it. We are looking into countries that show interesting patterns later in the report.
+When looking at how the happiness score is connected to the regions of the countries we have data for, we can see that they differ a lot in their spread. This is shown in @fig-box-regions. Western Europe and North America and ANZ have the comparatively highest median happiness scores. In contrast, for Sub-Saharan Africa and South Asia the median happiness is the lowest. The regions also differ strongly in the variance. The interquartile range (the range of variables within the first and third quarter percentiles) is larger in the Middle East and North Africa while for Africa and North America the boxes are very small. <br> Regions is understood as an aggregation for the variable country, as there are a big number of countries covered that it is not possible to visualize it. We are looking into countries that show interesting patterns later in the report.
+
+## Influence of the explanatory variables
 
 ```{r}
 #| echo: false
 #| output: false
 #| label: fig-multiple-scatter
-#| fig-cap: "Scatterplots for relationship of happiness score and different predictor variables." 
+#| fig-cap: "Scatterplots for relationship of happiness score and different predictor variables. The colors of the dots represent the corresponding region." 
 #| fig-scap: "Scatterplots for relationship of happiness score and different predictor variables."
 #| fig-subcap:
 #|   - "Happiness Score over GDP per Capita"
@@ -473,68 +474,15 @@ corrplot(whr_cor, p.mat = testRes$p, method = 'circle', type = 'lower', insig='b
          addCoef.col ='black', number.cex = 0.8, order = 'AOE', diag=FALSE)
 ```
 
-### GDP per Capita
+@fig-multiple-scatter shows the relationship of the happiness score and the explanatory variables and the colors of the dots represent which region the corresponding country belongs to. Subplot a shows the relationship between GDP per capita and the happiness score. There seems to be a positive linear relationship between the variables, as with higher GDP the happiness score rises. The relationship is stronger than it seems from the plot, as the scale ratio of x- and y-axis are so different. The correlation of these variables, which can be seen in figure @fig-corr-mat, is very high with a value of 0.72. It helps to provide further proof for the linear relationship between the variables. From the colors of the dots we can see that Sub-Saharan Africa and South Asia have both low GDP per capita and low happiness score values while Western Europe has the highest happiness score and also some of the highest GDP per capita values, followed by North America and ANZ.
 
-There seems to be a positive linear relationship between GDP per capita and the happiness score, as with higher GDP the happiness score rises. The relationship is stronger than it seems from the plot, as the scale ratio of x- and y-axis are so different. Calculating the correlation helps to provide further proof for the linear relationship between the variables.
+Similar plots results from the relationships of Social Support (subplot b), Healthy Life Expectancy (subplot c) and Freedom to make Life Choices (subplot d) with the happiness score. There is a positive linear relationship between both variables and the correlations are not as strong as for GDP per capita but still very strong with a values of 0.68 for Healthy Life Expectancy, followed by 0.65 for Social Support and 0.57 for Freedom to make Life Choices. Also the regional influences are similar for these plots. Interestingly, for healthy life expectancy some values are missing.
 
-```{r}
-#| echo: false
-# correlation of gdp per capita and happiness score
-cat("Correlation of the happiness score and GDP per capita:",cor(whr$gdp_per_capita, whr$happiness_score))
-```
+For generosity (subplot e) there is no connection between the variables visible. It is notable that there are three outlier countries with high generosity values from Southeast Asia, which have a below average happiness score.
 
-The correlation of these variables, which can be seen in figure @fig-corr-mat, is very high with a value of 0.72.
+The plot of perceptions of corruption (subplot f) shows a slight upward trend in happiness score for higher perceptions of corruption but it is only a fraction of data points that score high on perceptions of corruption. Also there is missing data for this variable. The correlation plot shows that there is again a positive correlation between the two variables of 0.41, even if it is weak compared to other variables that have been looked at.
 
-### Social Support
-
-Similar to GDP per Capita, there is a positive linear relationship between both variables.
-
-```{r}
-#| echo: false
-cat("Correlation of the happiness score and social support:",cor(whr$social_support, whr$happiness_score))
-```
-
-The correlation between social support and happiness score is not as strong as for GDP per capita but still very strong.
-
-### Healthy life expectancy
-
-Here, we again have a positive linear relationship between the two variables. Interestingly, for healthy life expectancy some values are missing.
-
-```{r}
-#| echo: false
-cat("Correlation of the happiness score and healthy life expectancy:",cor(whr$healthy_life_expectancy, whr$happiness_score, use = "complete.obs"))
-```
-
-There is a strong positive correlation between healthy life expectancy and the happiness score.
-
-### Freedom to make life choices
-
-In this case, there also is a positive linear relationship between freedom to make life choices and happiness score, even though it seems a bit weaker than with the variables discussed so far.
-
-```{r}
-#| echo: false
-cat("Correlation of the happiness score and freedom to make life choices:",cor(whr$freedom_to_make_life_choices, whr$happiness_score))
-```
-
-In general, there is a strong positive correlation between the variables but it is the weakest so far.
-
-### Generosity
-
-There is no connection between the variables visible here.
-
-### Perceptions of corruption
-
-For perceptions of corruption, there seems to be a slight upward trend in happiness score for higher perceptions of corruption but it is only a fraction of data points that score high on perceptions of corruption. Also there is missing data for this variable.
-
-```{r}
-#| echo: false
-cat("Correlation of the happiness score and Perceptions of corruption:",
-    cor(whr$perceptions_of_corruption, whr$happiness_score, use = "complete.obs"))
-```
-
-Calculating the correlation shows that there is again a positive correlation between the two variables, even if it appears weak compared to other variables that have been looked at.
-
-### Year
+## Influence of the Year
 
 ```{r}
 #| echo: false
