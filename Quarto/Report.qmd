@@ -28,6 +28,7 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(plotly)
 library(RColorBrewer)
+library(sf)
 ```
 
 ```{r}
@@ -302,9 +303,13 @@ latest_data$country <- recode(latest_data$country,
 world_data <- world %>%
   left_join(latest_data, by = c("name" = "country"))
 
+# Calculate centroids for the countries
+world_data_centroids <- st_centroid(world_data)
+
 # Create the heatmap with ggplot
-p <- ggplot(data = world_data) +
-  geom_sf(aes(fill = happiness_score, text = paste("Country:", name, "<br>Happiness Score:", happiness_score))) +
+p <- ggplot() +
+  geom_sf(data = world_data, aes(fill = happiness_score, text = paste("Country:", name, "<br>Happiness Score:", happiness_score))) +
+  geom_sf(data = world_data_centroids, aes(geometry = geometry, text = paste("Country:", name, "<br>Happiness Score:", happiness_score)), color = NA, size = 0) +
   scale_fill_viridis_c(na.value = "grey50") +
   labs(title = "World Happiness Map",
        fill = "Happiness Score") +
