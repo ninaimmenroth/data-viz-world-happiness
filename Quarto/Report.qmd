@@ -72,7 +72,7 @@ Happiness scores are measured based on the survey responses from the Gallup Worl
 
 Next, the Cantril Ladder score is a score range of 0 to 10, where 0 being the worst well-being condition and 10 being the best well-being condition. The Cantril Ladder asks to rate the current state of the respondents' well-being on this scale. The researchers of the WHR take the average score of the last 3 years and use it as the happiness score for the current year in order to even out fluctuations based on regional events like changes in government (4. World Happiness Report 2024). This average ladder score is the overall national **happiness score**. Sometimes, the term "*life evaluation*" is used interchangeably with happiness score.
 
-## 6 Explanatory Variables
+## Explanatory Variables
 
 In @fig-whr, which is Figure 2.1 of the World Happiness Report 2024, the happiness score or life evaluation is indicated for each country in the entire dataset.
 
@@ -81,6 +81,14 @@ In @fig-whr, which is Figure 2.1 of the World Happiness Report 2024, the happine
 Six explanatory variables are derived from the poll answers, and the associations of these variables with the happiness score help explain the variations across different countries. Those variables are Gross Domestic Product (GDP) per capita, healthy life expectancy, social support, freedom to make life choices, perceptions of corruption and generosity. Another variable shown in the plot is called "Dystopia + residual". Definitions of these variables will be explained in the Data section (@sec-data) of this report.
 
 According to the report, the sub-bars in @fig-whr, which represent the explanatory variables, do not influence the total score reported for each country (World Happiness Report 2024), however they merely indicate the country's overall score explained by each of the six explanatory variables (World Happiness Report). The sub-bars are measured by multiplying average data for the period of the last 3 years for each of those variables. For the 2024 report, the national average for 2021-2023 are calculated for the display of the sub-bars for each variable.
+
+## Goal of this research
+
+The goal of this report is to take a collaborative approach to explore different perspectives on the data to find connections between the happiness score and its explanatory variables and exploring how the happiness score behaves over different countries and regions. <br>
+First, the variables are explored in their distributions to gain a base understanding about them. To understand which countries are represented by the data and how the happiness score distributes over different countries, a world map with countries coloured by the size of their average happiness score is discussed. <br>
+Since happiness score is supposed to be explained by the other variables, there also are plots to represent the relationship between the happiness score and each of its explanatory variables. <br>
+To add to a further understanding about the connection between the explanatory variables and the geographical location, the countries are ranked by their average performance over each explanatory variable and the ten best and worst countries are presented. Finally, the ranking is done for the happiness score and connections are discussed. <br>
+To take advantage of the explanatory nature of the variables towards the happiness score, two different Machine Learning models are used to explore patterns and feature importance ranking of the predictor variables. For this, first a Kmeans Clustering algorithm is used on all numeric variables including the happiness score, to see how it classifies data and how this grouping can be interpreted. To find out more about feature importance when predicting the happiness score, a Random Forest is used to calculate feature importance from two different perspectives - decreasing prediction errors and improving how well the data is split into groups.
 
 # Software and Tools
 
@@ -502,7 +510,9 @@ whr |>
 
 For medians, there is a slight upwards trend over the years, with 2020 to 2022 having little variance compared to the other years. There are also negative outliers for 2021 to 2023.
 
-# Top and Bottom 10 Ranking of Countries in Predictor Variables
+# Top and Bottom 10 Ranking of Countries
+
+## Ranking for each Predictor Variable
 ```{r}
 #| warning: false
 #| echo: false
@@ -683,7 +693,7 @@ countries_df |>
   ylab("Countries") +
   theme(text = element_text(size = 13))
 ```
-# Top and Bottom 10 Ranking of Countries for Happiness Score
+## Ranking for Happiness Score
 ```{r}
 #| warning: false
 #| echo: false
