@@ -43,6 +43,9 @@ whr$perceptions_of_corruption <- as.numeric(whr$perceptions_of_corruption)
 # fix the naming of "Somaliland region" to "Somaliland Region" for consistency
 whr[whr$country == "Somaliland region",]$country = "Somaliland Region"
 
+# add Somalian Region to Sub-Saharan Africa
+whr[whr$country == "Somaliland Region",]$region = "Sub-Saharan Africa"
+
 whr_exp <- read_excel(here::here("Data/2024_Yearly_Expectations.xls"))
 
 whr_exp <- whr_exp %>% rename(country = "Country name")
@@ -553,8 +556,8 @@ countries_df$region <- save_region$region
 #| layout-ncol: 2
 
 # set a fixed colour scale over 11 regions
-my_colors <- setNames(c("#FFFF99", "#FFCC33", "#00FF66", "#CCFF33", "#66FFFF", "#CC99FF", "#FFCCFF", "#FF9966", "#00CCFF", "#FF6600", "#FF66FF"), levels(as.factor(countries_df$region)))
-# light yellow, light orange, neon green, light green, light blue, light violet,
+my_colors <- setNames(c("#FFCC33", "#00FF66", "#CCFF33", "#66FFFF", "#CC99FF", "#FFCCFF", "#FF9966", "#00CCFF", "#FF6600", "#FF66FF"), levels(as.factor(countries_df$region)))
+# light orange, neon green, light green, light blue, light violet,
 # light pink, light red, sky blue, red orange, pink
 
 # GDP per capita
