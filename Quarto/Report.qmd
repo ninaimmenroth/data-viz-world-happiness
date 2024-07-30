@@ -870,8 +870,8 @@ perc <- pr.out$sdev/sum(pr.out$sdev)
 ```{r}
 #| echo: false
 #| label: fig-pca-cum
-#| fig-cap: "Cumulative Propability of the Variance explained by each Principle Component." 
-#| fig-scap: "Cumulative Propability of the Variance explained by each Principle Component."
+#| fig-cap: "Cumulative Proportion of the Variance explained by each Principle Component."
+#| fig-scap: "Cumulative Proportion of the Variance explained by each Principle Component."
 #| layout-ncol: 1
 # plot cumulative sum of the percentages
 plot(cumsum(perc),
