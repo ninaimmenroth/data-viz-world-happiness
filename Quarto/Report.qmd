@@ -40,6 +40,9 @@ whr <- read.csv(here::here("Data/WHR_AllYears.csv"))
 # fix data type of perception of corruption
 whr$perceptions_of_corruption <- as.numeric(whr$perceptions_of_corruption)
 
+# fix the naming of "Somaliland region" to "Somaliland Region" for consistency
+whr[whr$country == "Somaliland region",]$country = "Somaliland Region"
+
 whr_exp <- read_excel(here::here("Data/2024_Yearly_Expectations.xls"))
 
 whr_exp <- whr_exp %>% rename(country = "Country name")
@@ -550,10 +553,9 @@ countries_df$region <- save_region$region
 #| layout-ncol: 2
 
 # set a fixed colour scale over 11 regions
-my_colors <- brewer.pal(11, "Paired")
-colors_df <- data.frame(
-  category = levels(as.factor(whr$region)),
-  color = my_colors)
+my_colors <- setNames(c("#FFFF99", "#FFCC33", "#00FF66", "#CCFF33", "#66FFFF", "#CC99FF", "#FFCCFF", "#FF9966", "#00CCFF", "#FF6600", "#FF66FF"), levels(as.factor(countries_df$region)))
+# light yellow, light orange, neon green, light green, light blue, light violet,
+# light pink, light red, sky blue, red orange, pink
 
 # GDP per capita
 countries_df |>
@@ -562,7 +564,7 @@ countries_df |>
   ggplot() +
   geom_col(aes(x = reorder(country, gdp_per_capita), y = gdp_per_capita, fill = region)) +
   coord_flip() +
-  scale_fill_manual(values = colors_df$color) +
+  scale_fill_manual(values = my_colors) +
   xlab("GDP per Capita") +
   ylab("Countries") +
   theme(text = element_text(size = 13))
@@ -573,7 +575,7 @@ countries_df |>
   ggplot() +
   geom_col(aes(x = reorder(country, gdp_per_capita), y = gdp_per_capita, fill = region)) +
   coord_flip() +
-  scale_fill_manual(values = colors_df$color) +
+  scale_fill_manual(values = my_colors) +
   xlab("GDP per Capita") +
   ylab("Countries") +
   theme(text = element_text(size = 13))
@@ -585,7 +587,7 @@ countries_df |>
   ggplot() +
   geom_col(aes(x = reorder(country, social_support), y = social_support, fill = region)) +
   coord_flip() +
-  scale_fill_manual(values = colors_df$color) +
+  scale_fill_manual(values = my_colors) +
   xlab("Social Support") +
   ylab("Countries") + 
   theme(text = element_text(size = 13))
@@ -596,7 +598,7 @@ countries_df |>
   ggplot() +
   geom_col(aes(x = reorder(country, social_support), y = social_support, fill = region)) +
   coord_flip() +
-  scale_fill_manual(values = colors_df$color) +
+  scale_fill_manual(values = my_colors) +
   xlab("Social Support") +
   ylab("Countries") + 
   theme(text = element_text(size = 13))
@@ -608,7 +610,7 @@ countries_df |>
   ggplot() +
   geom_col(aes(x = reorder(country, healthy_life_expectancy), y = healthy_life_expectancy, fill = region)) +
   coord_flip() +
-  scale_fill_manual(values = colors_df$color) +
+  scale_fill_manual(values = my_colors) +
   xlab("Healthy Life Expectancy") +
   ylab("Countries") +
   theme(text = element_text(size = 13))
@@ -619,7 +621,7 @@ countries_df |>
   ggplot() +
   geom_col(aes(x = reorder(country, healthy_life_expectancy), y = healthy_life_expectancy, fill = region)) +
   coord_flip() +
-  scale_fill_manual(values = colors_df$color) +
+  scale_fill_manual(values = my_colors) +
   xlab("Healthy Life Expectancy") +
   ylab("Countries") +
   theme(text = element_text(size = 13))
@@ -631,7 +633,7 @@ countries_df |>
   ggplot() +
   geom_col(aes(x = reorder(country, generosity), y = generosity, fill = region)) +
   coord_flip() +
-  scale_fill_manual(values = colors_df$color) +
+  scale_fill_manual(values = my_colors) +
   xlab("Generosity") +
   ylab("Countries") +
   theme(text = element_text(size = 13))
@@ -642,7 +644,7 @@ countries_df |>
   ggplot() +
   geom_col(aes(x = reorder(country, generosity), y = generosity, fill = region)) +
   coord_flip() +
-  scale_fill_manual(values = colors_df$color) +
+  scale_fill_manual(values = my_colors) +
   xlab("Generosity") +
   ylab("Countries") +
   theme(text = element_text(size = 13))
@@ -654,7 +656,7 @@ countries_df |>
   ggplot() +
   geom_col(aes(x = reorder(country, freedom_to_make_life_choices), y = freedom_to_make_life_choices, fill = region)) +
   coord_flip() +
-  scale_fill_manual(values = colors_df$color) +
+  scale_fill_manual(values = my_colors) +
   xlab("Freedom to make Life Choices") +
   ylab("Countries") +
   theme(text = element_text(size = 13))
@@ -665,7 +667,7 @@ countries_df |>
   ggplot() +
   geom_col(aes(x = reorder(country, freedom_to_make_life_choices), y = freedom_to_make_life_choices, fill = region)) +
   coord_flip() +
-  scale_fill_manual(values = colors_df$color) +
+  scale_fill_manual(values = my_colors) +
   xlab("Freedom to make Life Choices") +
   ylab("Countries") +
   theme(text = element_text(size = 13))
@@ -677,7 +679,7 @@ countries_df |>
   ggplot() +
   geom_col(aes(x = reorder(country, perceptions_of_corruption), y = perceptions_of_corruption, fill = region)) +
   coord_flip() +
-  scale_fill_manual(values = colors_df$color) +
+  scale_fill_manual(values = my_colors) +
   xlab("Perceptions of Corruption") +
   ylab("Countries") +
   theme(text = element_text(size = 13))
@@ -688,11 +690,13 @@ countries_df |>
   ggplot() +
   geom_col(aes(x = reorder(country, perceptions_of_corruption), y = perceptions_of_corruption, fill = region)) +
   coord_flip() +
-  scale_fill_manual(values = colors_df$color) +
+  scale_fill_manual(values = my_colors) +
   xlab("Perceptions of Corruption") +
   ylab("Countries") +
   theme(text = element_text(size = 13))
 ```
+When looking at the resulting top and bottom rankings and the regions that these countries belong to in @fig-ranking1 , there is a clear pattern showing high ranking countries often are from Western Europe and Low-Ranking countries are from African regions for most plots. However, for generosity there is an exception with the highest ranking countries being from a variety of regions not fitting the pattern for other predictors consisting of a lot of Western European Countries. Also for bottom ranking countries for generosity, there are some Central and Eastern European countries ranked lowest. For perceptions of corruption, where a bottom rank has a positive connotation and best ranking a negative one, it shows a strong inner-European rift where there are a lot of Western European countries scoring high but Central and Eastern European country scoring lowest.
+
 ## Ranking for Happiness Score
 ```{r}
 #| warning: false
@@ -711,7 +715,7 @@ countries_df |>
   ggplot() +
   geom_col(aes(x = reorder(country, happiness_score), y = happiness_score, fill = region)) +
   coord_flip() +
-  scale_fill_manual(values = colors_df$color) +
+  scale_fill_manual(values = my_colors) +
   xlab("GDP per Capita") +
   ylab("Countries") +
   theme(text = element_text(size = 13))
@@ -722,11 +726,12 @@ countries_df |>
   ggplot() +
   geom_col(aes(x = reorder(country, happiness_score), y = happiness_score, fill = region)) +
   coord_flip() +
-  scale_fill_manual(values = colors_df$color) +
+  scale_fill_manual(values = my_colors) +
   xlab("GDP per Capita") +
   ylab("Countries") +
   theme(text = element_text(size = 13))
 ```
+When ranking the happiness score (@fig-ranking2), the pattern for top countries continues with the top countries all being Western European, followed by North American and ANZ countries. For the lowest ranking countries, all except Afghanistan are from Africa, following part of the pattern seen in predictors. African countries ranking lowest for GDP per capita, social support, healthy life expectancy and freedom to make life choices which seem to influence happiness strongly. On the other hand, countries from regions that rank highly for predictors also appear here, showing that stable and comfortable living conditions coincide with high happiness. Interestingly, happier regions also rank high for perceived corruption, showing that good living conditions might be connected to a feeling of companies strongly influencing politics which is accepted as lobbying practices.
 
 # Using K-means Clustering to find interesting patterns
 
@@ -810,6 +815,7 @@ After k = 2 the decrease of within sum of squares is not as strong anymore. Ther
 ```{r}
 #| echo: false
 # train K-Means
+set.seed(1)
 km.out <- kmeans(sc_whr, centers = 2, nstart = 20)
 
 my.text.panel <- function(labels) {
