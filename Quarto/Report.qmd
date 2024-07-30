@@ -90,11 +90,11 @@ According to the report, the sub-bars in @fig-whr, which represent the explanato
 
 ## Goal of this research
 
-The goal of this report is to take a collaborative approach to explore different perspectives on the data to find connections between the happiness score and its explanatory variables and exploring how the happiness score behaves over different countries and regions. <br>
-First, the variables are explored in their distributions to gain a base understanding about them. To understand which countries are represented by the data and how the happiness score distributes over different countries, a world map with countries coloured by the size of their average happiness score is discussed. <br>
-Since happiness score is supposed to be explained by the other variables, there also are plots to represent the relationship between the happiness score and each of its explanatory variables. <br>
+The goal of this report is to take a collaborative approach to explore and visualize different perspectives on the data to find connections between the happiness score and its explanatory variables and exploring how the happiness score behaves over different countries and regions. <br>
+First, the variables are explored in their distributions to gain a base understanding about them. To understand which countries are represented by the data and how the happiness score distributes over different countries, a world map with countries colored by the size of their average happiness score is discussed. <br>
+Since happiness score might be influenced by the other variables, there also are plots to represent the relationship between the happiness score and each of its explanatory variables. <br>
 To add to a further understanding about the connection between the explanatory variables and the geographical location, the countries are ranked by their average performance over each explanatory variable and the ten best and worst countries are presented. Finally, the ranking is done for the happiness score and connections are discussed. <br>
-To take advantage of the explanatory nature of the variables towards the happiness score, two different Machine Learning models are used to explore patterns and feature importance ranking of the predictor variables. For this, first a Kmeans Clustering algorithm is used on all numeric variables including the happiness score, to see how it classifies data and how this grouping can be interpreted. To find out more about feature importance when predicting the happiness score, a Random Forest is used to calculate feature importance from two different perspectives - decreasing prediction errors and improving how well the data is split into groups.
+In order to take advantage of the explanatory nature of the variables towards the happiness score, two different Machine Learning models are used to explore patterns and feature importance ranking of the predictor variables. For this, first a Kmeans Clustering algorithm is used on all numeric variables including the happiness score, to see how it classifies data and how this grouping can be interpreted. To find out more about feature importance when predicting the happiness score, a Random Forest is used to calculate feature importance from two different perspectives - decreasing prediction errors and improving how well the data is split into groups. 
 
 # Software and Tools
 
@@ -131,6 +131,8 @@ Functions from these packages were used to conduct the analysis, with the follow
 ## World Happiness Report Data 2015-2023
 
 The dataset was obtained from the Kaggle datasets collection and it includes the World Happiness Report data between 2015 and 2023. The dataset contains the country name, region name, national happiness score, and the other explanatory factors (Islam 2023). Those explanatory factors are GDP per capita, social support, healthy life expectancy, freedom to make life choices, generosity, and perceptions of corruption. The variables in the dataset represent socio-economic and well-being statuses from the individuals who participated in the Gallup World Poll in that duration. It is the dataset which is mainly used in this report.
+
+One small change was made to the dataset in the context of data cleaning. There was a region named "Africa" that is explained by the Somaliland Region being assigned to Africa when first appearing in the world happiness report. This region functions like an own country but officially belongs to Somalia which poses a corner case for assigning country and region for this country. That is why we decided to change the region for this country to Sub-Saharan Africa, which is the region Somalia belongs to.
 
 ## World Happiness Report 2024 Chapter 2 Appendix {#sec-GWP-data}
 
@@ -284,7 +286,7 @@ ggplot(whr, aes(x = year, fill = as.factor(year))) +
 
 @fig-distributions shows the distributions of numerical variables, for all of the plots except a, b and i, the original data from the Gallup World Poll (see @sec-GWP-data) is used in order to see the true distributions and not the scaled ones that were calculated for the World Happiness Report.
 
-Most of the distributions are skewed towards one side. GDP per capita, social support, healthy life expectancy and perceptions of corruption are left-skewed: The tip of the density curve is located on the right side of the plot, but there is a long tail for lower values. Generosity's distribution on the other hand appears to be right-skewed as there are more values for high values than for very low values. The tip of the curve is close to 0 on the negative side though. The happiness score appears to to be somewhat normally distributed with 5.44 being the mean value of the answer scale 0 - 10.<br> For region, the African and European regions make up most of the data set. There is one small "Africa" bar that is explained by the Somaliland Region being assigned to Africa when first appearing in the world happiness report. This region functions like an own country but officially belongs to Somalia which poses a corner case for assigning country and region for this country. <br> The distribution of countries that participated per year shows that from 2019 onwards there has been a notable decline in countries that took part in the world happiness report.
+Most of the distributions are skewed towards one side. GDP per capita, social support, healthy life expectancy and perceptions of corruption are left-skewed: The tip of the density curve is located on the right side of the plot, but there is a long tail for lower values. Generosity's distribution on the other hand appears to be right-skewed as there are more values for high values than for very low values. The tip of the curve is close to 0 on the negative side though, which leads to a mean value of zero. The happiness score appears to to be somewhat normally distributed with 5.44 being the mean value of the answer scale 0 - 10.<br> For region, the African and European regions make up most of the data set.<br> The distribution of countries that participated per year shows that from 2019 onward there has been a notable decline in countries that took part in the world happiness report.
 
 ## Distribution of the Happiness Score around the globe {#sec-distro-globe}
 ```{r}
@@ -351,9 +353,7 @@ Other interesting patterns can be observed in Latin America and Eastern Europe, 
 
 Overall, the map shows that the highest happiness scores are mainly found in wealthy and developed countries, while the lowest scores occur in regions with economic and social challenges. This global distribution of happiness scores illustrates the strong regional differences in perceived well-being and suggests the significance of socio-economic factors for individual happiness.
 
-# Exploring the relationship between Happiness Score and its numerical explanatory variables {#sec-rel-pred}
-
-First, through plots the relationship between happiness score and other variables is explored. Afterwards a Kmeans model is used to look into a possible clustering of the data and how the resulting clusters can be interpreted. Lastly, we will look into how a RandomForest model rates the importance of variables when trying to predict the happiness score.<span style="color:red">Move this to beginning of main part and edit.</span>
+# Relationship between Happiness Score and its numerical explanatory variables {#sec-rel-pred}
 
 In this section the influence of the explanatory variables and the regions on the happiness score is explored. The box plots of happiness score over different regions highlights the differences over the globe which are already recognizable in sec-distro-globe. In order to find out what makes humans most happy, the correlations between the variables and the happiness score can give some indication. This is emphasized by scatter plots which also show the different regions' influences on these correlations.
 
@@ -374,7 +374,7 @@ whr |>
   coord_flip()
 ```
 
-When looking at how the happiness score is connected to the regions of the countries we have data for, we can see that they differ a lot in their spread. This is shown in @fig-box-regions. Western Europe and North America and ANZ have the comparatively highest median happiness scores. In contrast, for Sub-Saharan Africa and South Asia the median happiness is the lowest. The regions also differ strongly in the variance. The interquartile range (the range of variables within the first and third quarter percentiles) is larger in the Middle East and North Africa while for Africa and North America the boxes are very small. <br> Regions is understood as an aggregation for the variable country, as there are a big number of countries covered that it is not possible to visualize it. We are looking into countries that show interesting patterns later in the report.
+When looking at how the happiness score is connected to the regions of the countries we have data for, we can see that they differ a lot in their spread. This is shown in @fig-box-regions. Western Europe and North America and ANZ have the comparatively highest median happiness scores. In contrast, for Sub-Saharan Africa and South Asia the median happiness is the lowest. The regions also differ strongly in the variance. The interquartile range (the range of variables within the first and third quarter percentiles) is larger in the Middle East and North Africa while for North America and ANZ the box is very small. The latter can be explained by only few countries stretching over big continents, thus leaving fewer happiness score results for this big region and all of its inhabitants. <br> Regions is understood as an aggregation for the variable country, as there are a big number of countries covered that it is not possible to visualize it. We are looking into countries that show interesting patterns later in the report.
 
 ## Influence of the explanatory variables
 
@@ -538,8 +538,8 @@ countries_df$region <- save_region$region
 #| warning: false
 #| echo: false
 #| label: fig-ranking1
-#| fig-cap: "Top and bottom ranking of countries over predictors coloured by region." 
-#| fig-scap: "Top and bottom ranking of countries over predictors coloured by region."
+#| fig-cap: "Top and bottom ranking of countries over predictors colored by region." 
+#| fig-scap: "Top and bottom ranking of countries over predictors colored by region."
 #| fig-subcap:
 #|   - "Top 10 countries: GDP per Capita"
 #|   - "Bottom 10 countries: GDP per Capita"
@@ -705,8 +705,8 @@ When looking at the resulting top and bottom rankings and the regions that these
 #| warning: false
 #| echo: false
 #| label: fig-ranking2
-#| fig-cap: "Top and bottom ranking of countries for happiness score coloured by region." 
-#| fig-scap: "Top and bottom ranking of countries for happiness score coloured by region."
+#| fig-cap: "Top and bottom ranking of countries for happiness score colored by region." 
+#| fig-scap: "Top and bottom ranking of countries for happiness score colored by region."
 #| fig-subcap:
 #|   - "Top 10 countries: Happiness Score"
 #|   - "Bottom 10 countries: Happiness Score"
@@ -832,8 +832,8 @@ my.text.panel <- function(labels) {
 ```{r fig.width=10, fig.height=10}
 #| echo: false
 #| label: fig-k-means-plot
-#| fig-cap: "Matrix of scatterplots coloured by cluster." 
-#| fig-scap: "Matrix of scatterplots coloured by cluster."
+#| fig-cap: "Matrix of scatterplots colored by cluster." 
+#| fig-scap: "Matrix of scatterplots colored by cluster."
 #| layout-ncol: 1
 # plot resulting clustering
 pairs(sc_whr, col = km.out$cluster, upper.panel = NULL, gap = 0,
