@@ -29,6 +29,7 @@ library(rnaturalearthdata)
 library(plotly)
 library(RColorBrewer)
 library(sf)
+library(gridExtra)
 ```
 
 ```{r}
@@ -74,7 +75,7 @@ The report is a collaboration of Gallup, the Oxford Wellbeing Research Centre, t
 
 ### Understanding the Happiness Score
 
-Happiness scores are measured based on the survey responses from the Gallup World Poll (GWP) (World Happiness Report). The evaluation from the GWP primarily stems from answers of the survey questions and the Cantril Ladder score. The poll comprises of more than 100 questions that include global questions and region-specific topics regarding several well-being areas. Those well-being areas include law and order, good jobs, well-being, food and shelter, institutions and infrastructure, and brain gain (Wikipedia 2024). Gallup typically collects for a sample size of 1,000 people for each country annually.
+Happiness scores are measured based on the survey responses from the Gallup World Poll (GWP) (World Happiness Report). The evaluation from the GWP primarily stems from answers of the survey questions and the Cantril Ladder score. The poll comprises more than 100 questions that include global questions and region-specific topics regarding several well-being areas. Those well-being areas include law and order, good jobs, well-being, food and shelter, institutions and infrastructure, and brain gain (Wikipedia 2024). Gallup typically collects for a sample size of 1,000 people for each country annually.
 
 Next, the Cantril Ladder score is a score range of 0 to 10, where 0 being the worst well-being condition and 10 being the best well-being condition. The Cantril Ladder asks to rate the current state of the respondents' well-being on this scale. The researchers of the WHR take the average score of the last 3 years and use it as the happiness score for the current year in order to even out fluctuations based on regional events like changes in government (4. World Happiness Report 2024). This average ladder score is the overall national **happiness score**. Sometimes, the term "*life evaluation*" is used interchangeably with happiness score.
 
@@ -91,10 +92,10 @@ According to the report, the sub-bars in @fig-whr, which represent the explanato
 ## Goal of this research
 
 The goal of this report is to take a collaborative approach to explore and visualize different perspectives on the data to find connections between the happiness score and its explanatory variables and exploring how the happiness score behaves over different countries and regions. <br>
-First, the variables are explored in their distributions to gain a base understanding about them. To understand which countries are represented by the data and how the happiness score distributes over different countries, a world map with countries colored by the size of their average happiness score is discussed. <br>
+First, the variables are explored in their distributions to gain a base understanding about them. To understand which countries are represented by the data and how the happiness score distributes over different countries, a world map with countries colored by the extent of their average happiness score is discussed. <br>
 Since happiness score might be influenced by the other variables, there also are plots to represent the relationship between the happiness score and each of its explanatory variables. <br>
 To add to a further understanding about the connection between the explanatory variables and the geographical location, the countries are ranked by their average performance over each explanatory variable and the ten best and worst countries are presented. Finally, the ranking is done for the happiness score and connections are discussed. <br>
-In order to take advantage of the explanatory nature of the variables towards the happiness score, two different Machine Learning models are used to explore patterns and feature importance ranking of the predictor variables. For this, first a Kmeans Clustering algorithm is used on all numeric variables including the happiness score, to see how it classifies data and how this grouping can be interpreted. To find out more about feature importance when predicting the happiness score, a Random Forest is used to calculate feature importance from two different perspectives - decreasing prediction errors and improving how well the data is split into groups. 
+In order to take advantage of the explanatory nature of the variables towards the happiness score, two different Machine Learning models are used to explore patterns and feature importance ranking of the predictor variables. For this, first a Kmeans Clustering algorithm is used on all numeric variables including the happiness score, to see how it splits the data and how this grouping can be interpreted. To find out more about feature importance when predicting the happiness score, a Random Forest is used to calculate feature importance from two different perspectives - decreasing prediction errors and improving how well the data is split into groups.
 
 # Software and Tools
 
@@ -130,13 +131,13 @@ Functions from these packages were used to conduct the analysis, with the follow
 
 ## World Happiness Report Data 2015-2023
 
-The dataset was obtained from the Kaggle datasets collection and it includes the World Happiness Report data between 2015 and 2023. The dataset contains the country name, region name, national happiness score, and the other explanatory factors (Islam 2023). Those explanatory factors are GDP per capita, social support, healthy life expectancy, freedom to make life choices, generosity, and perceptions of corruption. The variables in the dataset represent socio-economic and well-being statuses from the individuals who participated in the Gallup World Poll in that duration. It is the dataset which is mainly used in this report.
+The dataset was obtained from the Kaggle datasets collection. It includes the World Happiness Report data between 2015 and 2023. The dataset contains the country name, region name, national happiness score, and the other explanatory factors (Islam 2023). Those explanatory factors are GDP per capita, social support, healthy life expectancy, freedom to make life choices, generosity, and perceptions of corruption. The variables in the dataset represent socio-economic and well-being statuses from the individuals who participated in the Gallup World Poll in that duration. It is the dataset which is mainly used in this report.
 
 One small change was made to the dataset in the context of data cleaning. There was a region named "Africa" that is explained by the Somaliland Region being assigned to Africa when first appearing in the world happiness report. This region functions like an own country but officially belongs to Somalia which poses a corner case for assigning country and region for this country. That is why we decided to change the region for this country to Sub-Saharan Africa, which is the region Somalia belongs to.
 
 ## World Happiness Report 2024 Chapter 2 Appendix {#sec-GWP-data}
 
-The dataset for the Chapter Appendix comes from the survey responses of the Gallup World Poll from 2005 and 2023. The dataset contains demographical information, namely country name and region name, and numerical information for GDP per capita, social support, healthy life expectancy, freedom to make life choices, generosity and perceptions of corruption. Contrary to the previous dataset, the GDP per capita and healthy life expentancy columns is in its true average representation and not adjusted for the life evaluation score. That is why this dataset is used for visualizing some of the variable distributions in @sec-distro.
+The dataset for the Chapter Appendix comes from the survey responses of the Gallup World Poll from 2005 and 2023. The dataset contains demographic information, namely country name and region name, and numerical information for GDP per capita, social support, healthy life expectancy, freedom to make life choices, generosity and perceptions of corruption. Contrary to the previous dataset, the GDP per capita and healthy life expectancy columns is in its true average representation and not adjusted for the life evaluation score. That is why this dataset is used for visualizing some of the variable distributions in @sec-distro.
 
 ## Variable Definitions
 
@@ -284,9 +285,9 @@ ggplot(whr, aes(x = year, fill = as.factor(year))) +
   guides(fill="none")
 ```
 
-@fig-distributions shows the distributions of numerical variables, for all of the plots except a, b and i, the original data from the Gallup World Poll (see @sec-GWP-data) is used in order to see the true distributions and not the scaled ones that were calculated for the World Happiness Report.
+@fig-distributions shows the distributions of numerical variables. For all of the plots except a, b and i, the original data from the Gallup World Poll (see @sec-GWP-data) is used in order to see the true distributions and not the scaled ones that were calculated for the World Happiness Report.
 
-Most of the distributions are skewed towards one side. GDP per capita, social support, healthy life expectancy and perceptions of corruption are left-skewed: The tip of the density curve is located on the right side of the plot, but there is a long tail for lower values. Generosity's distribution on the other hand appears to be right-skewed as there are more values for high values than for very low values. The tip of the curve is close to 0 on the negative side though, which leads to a mean value of zero. The happiness score appears to to be somewhat normally distributed with 5.44 being the mean value of the answer scale 0 - 10.<br> For region, the African and European regions make up most of the data set.<br> The distribution of countries that participated per year shows that from 2019 onward there has been a notable decline in countries that took part in the world happiness report.
+Most of the distributions are skewed towards one side. GDP per capita, social support, healthy life expectancy and perceptions of corruption are left-skewed: The tip of the density curve is located on the right side of the plot, but there is a long tail for lower values. Generosity's distribution on the other hand appears to be right-skewed as there are more values for high values than for very low values. The tip of the curve is close to 0 on the negative side though, which leads to a mean value of zero. The happiness score appears to be somewhat normally distributed with 5.44 being the mean value of the answer scale 0 - 10.<br> For region, the African and European regions make up most of the data set.<br> The distribution of countries that participated per year shows that from 2019 onward there has been a notable decline in countries that took part in the world happiness report.
 
 ## Distribution of the Happiness Score around the globe {#sec-distro-globe}
 ```{r}
@@ -460,8 +461,8 @@ ggdraw(legend)
 ```{r}
 #| echo: false
 #| label: fig-corr-mat
-#| fig-cap: "Correlation matrix plot. HS = Happiness Score, GpC = GDP per Capita, SS = Social Support, HLE = Healthy Life Expectancy , FtmLC = Freedom to make life choices, G = Generosity, PoC = Perception of Corruption, Y = Year."
-#| fig-scap: "Correlation matrix plot. HS = Happiness Score, GpC = GDP per Capita, SS = Social Support, HLE = Healthy Life Expectancy , FtmLC = Freedom to make life choices, G = Generosity, PoC = Perception of Corruption, Y = Year."
+#| fig-cap: "Correlation matrix plot. HS = Happiness Score, GpC = GDP per Capita, SS = Social Support, HLE = Healthy Life Expectancy, FtmLC = Freedom to make life choices, G = Generosity, PoC = Perception of Corruption, Y = Year."
+#| fig-scap: "Correlation matrix plot. HS = Happiness Score, GpC = GDP per Capita, SS = Social Support, HLE = Healthy Life Expectancy, FtmLC = Freedom to make life choices, G = Generosity, PoC = Perception of Corruption, Y = Year."
 #| layout-ncol: 1
 
 #remove non-numeric variables
@@ -490,11 +491,11 @@ corrplot(whr_cor, p.mat = testRes$p, method = 'circle', type = 'lower', insig='b
 
 @fig-multiple-scatter shows the relationship of the happiness score and the explanatory variables and the colors of the dots represent which region the corresponding country belongs to. Subplot a shows the relationship between GDP per capita and the happiness score. There seems to be a positive linear relationship between the variables, as with higher GDP the happiness score rises. The relationship is stronger than it seems from the plot, as the scale ratio of x- and y-axis are so different. The correlation of these variables, which can be seen in figure @fig-corr-mat, is very high with a value of 0.72. It helps to provide further proof for the linear relationship between the variables. From the colors of the dots we can see that Sub-Saharan Africa and South Asia have both low GDP per capita and low happiness score values while Western Europe has the highest happiness score and also some of the highest GDP per capita values, followed by North America and ANZ.
 
-Similar plots results from the relationships of Social Support (subplot b), Healthy Life Expectancy (subplot c) and Freedom to make Life Choices (subplot d) with the happiness score. There is a positive linear relationship between both variables and the correlations are not as strong as for GDP per capita but still very strong with a values of 0.68 for Healthy Life Expectancy, followed by 0.65 for Social Support and 0.57 for Freedom to make Life Choices. Also the regional influences are similar for these plots. Interestingly, for healthy life expectancy some values are missing.
+Similar plots results from the relationships of Social Support (subplot b), Healthy Life Expectancy (subplot c) and Freedom to make Life Choices (subplot d) with the happiness score. There is a positive linear relationship between both variables and the correlations are not as strong as for GDP per capita but still very strong with a values of 0.68 for Healthy Life Expectancy, followed by 0.65 for Social Support and 0.57 for Freedom to make Life Choices. Also, the regional influences are similar for these plots. Interestingly, for healthy life expectancy some values are missing.
 
 For generosity (subplot e) there is no connection between the variables visible. It is notable that there are three outlier countries with high generosity values from Southeast Asia, which have a below average happiness score.
 
-The plot of perceptions of corruption (subplot f) shows a slight upward trend in happiness score for higher perceptions of corruption but it is only a fraction of data points that score high on perceptions of corruption. Also there is missing data for this variable. The correlation plot shows that there is again a positive correlation between the two variables of 0.41, even if it is weak compared to other variables that have been looked at.
+The plot of perceptions of corruption (subplot f) shows a slight upward trend in happiness score for higher perceptions of corruption, but it is only a fraction of data points that score high on perceptions of corruption. Also, there is missing data for this variable. The correlation plot shows that there is again a positive correlation between the two variables of 0.41, even if it is weak compared to other variables that have been looked at.
 
 ## Influence of the Year
 
@@ -514,7 +515,108 @@ whr |>
   ylab("Happiness Score")
 ```
 
-For medians, there is a slight upwards trend over the years, with 2020 to 2022 having little variance compared to the other years. There are also negative outliers for 2021 to 2023.
+As observable in @fig-box-year, for medians, there is a slight upwards trend over the years, with 2020 to 2022 having less variance compared to the other years. Furthermore, there are negative outliers for 2021 to 2023.
+
+```{r}
+#| echo: false
+#| label: fig-highest-change
+#| fig-cap: "Top-3 Countries with highest positive and negative change in happiness score from 2015 to 2023."
+#| fig-scap: "Top-3 Countries with highest positive and negative change in happiness score from 2015 to 2023."
+#| layout-ncol: 1
+
+# Calculate the change in happiness score for each country
+change_data <- whr %>%
+  mutate(year = as.numeric(as.character(year))) %>%
+  group_by(country) %>%
+  summarize(
+    first_year = min(year),
+    last_year = max(year),
+    first_score = happiness_score[year == first_year],
+    last_score = happiness_score[year == last_year],
+    change = last_score - first_score
+  )
+
+# Identify the top 3 countries with the most improvement
+most_improved <- change_data %>% arrange(desc(change)) %>% head(3)
+
+# Identify the top 3 countries with the most decline
+most_declined <- change_data %>% arrange(change) %>% head(3)
+
+# Combine these countries into one data frame
+top_countries <- bind_rows(most_improved, most_declined)
+
+# Create a bar chart for the changes in happiness score
+ggplot(top_countries, aes(x = reorder(country, change), y = change, fill = change > 0)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Countries with Highest Change in Happiness Score from 2015 to 2023",
+       x = "Country",
+       y = "Change in Happiness Score",
+       fill = "Improved") +
+  scale_fill_manual(values = c("TRUE" = "darkgreen", "FALSE" = "darkred")) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+The chart in @fig-highest-change shows the countries with the largest changes in the happiness score from 2015 to 2023. The countries are sorted by their difference in their happiness scores, with positive changes shown in green and negative changes in red.
+Romania, Guinea, and Ivory Coast are the countries with the greatest improvements in happiness score, with Romania showing the highest positive change. On the other hand, Venezuela, Afghanistan, and Lebanon have experienced the largest decreases in happiness scores, with Lebanon showing the largest decrease. These differences illustrate that global wellbeing indicators develop in manifold ways across the globe.
+
+```{r, fig.width=15}
+#| echo: false
+#| label: fig-highest-change-each-year
+#| fig-cap: "Development of happiness score over the years for countries with greatest positive and negative change."
+#| fig-scap: "Development of happiness score over the years for countries with greatest positive and negative change."
+#| layout-ncol: 1
+
+# Filter the data for the six countries
+filtered_data <- whr %>% filter(country %in% top_countries$country)
+
+# Create a new column to distinguish improving and declining countries
+filtered_data <- filtered_data %>%
+  mutate(trend = ifelse(country %in% most_improved$country, "Improving", "Declining"))
+
+# Create line charts for the happiness scores over the years
+p1 <- ggplot(filtered_data %>% filter(trend == "Improving"),
+             aes(x = year, y = happiness_score, color = country, group = country)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Happiness Score Over the Years (Improving Countries)",
+       x = "Year",
+       y = "Happiness Score") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 17, face = "bold"),
+    axis.title = element_text(size = 17),
+    axis.text = element_text(size = 15),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.title = element_text(size = 17),
+    legend.text = element_text(size = 15)
+  )
+
+p2 <- ggplot(filtered_data %>% filter(trend == "Declining"),
+             aes(x = year, y = happiness_score, color = country, group = country)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Happiness Score Over the Years (Declining Countries)",
+       x = "Year",
+       y = "Happiness Score") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 17, face = "bold"),
+    axis.title = element_text(size = 17),
+    axis.text = element_text(size = 15),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.title = element_text(size = 17),
+    legend.text = element_text(size = 15)
+  )
+
+# Arrange the two plots side by side
+grid.arrange(p1, p2, ncol = 2)
+```
+
+The two graphs in @fig-highest-change-each-year show the development of happiness scores over the years for the countries that have experienced the greatest changes. The left-hand diagram shows that Romania has seen a steady increase in happiness score, especially in recent years. The development in happiness score for the Ivory Coast and Guinea is not as steady as for Romania, but the overall trend is positive. Both countries improved their happiness score from about 3.7 in 2015 to about 5 in 2023.
+
+The diagram on the right shows a clear continuous downward trend for both Lebanon and Afghanistan. Venezuela's happiness score is declining until 2019 and plateauing since then.
 
 # Top and Bottom 10 Ranking of Countries
 
@@ -698,7 +800,7 @@ countries_df |>
   ylab("Countries") +
   theme(text = element_text(size = 13))
 ```
-When looking at the resulting top and bottom rankings and the regions that these countries belong to in @fig-ranking1 , there is a clear pattern showing high ranking countries often are from Western Europe and Low-Ranking countries are from African regions for most plots. However, for generosity there is an exception with the highest ranking countries being from a variety of regions not fitting the pattern for other predictors consisting of a lot of Western European Countries. Also for bottom ranking countries for generosity, there are some Central and Eastern European countries ranked lowest. For perceptions of corruption, where a bottom rank has a positive connotation and best ranking a negative one, it shows a strong inner-European rift where there are a lot of Western European countries scoring high but Central and Eastern European country scoring lowest.
+When looking at the resulting top and bottom rankings and the regions that these countries belong to in @fig-ranking1, there is a clear pattern showing high ranking countries often are from Western Europe and Low-Ranking countries are from African regions for most plots. However, for generosity there is an exception with the highest ranking countries being from a variety of regions not fitting the pattern for other predictors consisting of a lot of Western European Countries. Also for bottom ranking countries for generosity, there are some Central and Eastern European countries ranked lowest. For perceptions of corruption, where a bottom rank has a positive connotation and best ranking a negative one, it shows a strong inner-European rift where there are a lot of Western European countries scoring high but Central and Eastern European country scoring lowest.
 
 ## Ranking for Happiness Score
 ```{r}
@@ -846,7 +948,7 @@ pairs(sc_whr, col = km.out$cluster, upper.panel = NULL, gap = 0,
                                    perceptions_of_corruption = "Perceived corruption")))
 ```
 
-When looking at the scatterplots, the first thing to be noted is that for happiness score, there is the cleanest split between the clusters which basically splits the plot into a happiness score that is bigger than 0 and vice versa. In other words, the clusters are strongly informed by whether the happiness score is in the upper 50% quantile or below.
+When looking at the scatter plots, the first thing to be noted is that for happiness score, there is the cleanest split between the clusters which basically splits the plot into a happiness score that is bigger than 0 and vice versa. In other words, the clusters are strongly informed by whether the happiness score is in the upper 50% quantile or below.
 
 ```{r}
 #| echo: false
@@ -881,7 +983,7 @@ rf.whr <- randomForest(happiness_score ~ ., data = whr_noNA, mtry = 3, ntree = 1
 varImpPlot(rf.whr, scale = FALSE, main = "Feature Importance for predicting Happiness Score")
 ```
 
-The left plot shows how much a variable contributes to decreasing the mean squared error of the resulting model. The mean squared error measures the difference between the true values and predictions. The variables are ordered by how much the variables increase the mean squared error when being left out. From this example, GDP per capita improves the tree by lowering the MSE the most and vice versa - when it is missing, the MSE is a lot higher. <br> Node Purity on the other hand represents how well the tree splits the data in similar target values. The more often variable is used for splitting a node in two further branches, the more important is the variable. In this plot GDP per capita again ranks highest, which means that it provides a useful condition on which to split groups. <br> When predicting the happiness score, GDP per capita and healthy life expectancy are ranked the highest for both importancy measures. This coincides with the high correlations that have been measured for the scatterplots between happiness score and the two variables. <br> An important thing to keep in mind is that there is an element of randomness in these results. For different seeds, the top four variables are stable, but how important they are and their ranking can be different. It also should be noted at an increased MSE of 20% for example freedom to make life choices is still a strong impact, even if this variable appears of low rank compared to others.
+The left plot shows how much a variable contributes to decreasing the mean squared error of the resulting model. The mean squared error measures the difference between the true values and predictions. The variables are ordered by how much the variables increase the mean squared error when being left out. From this example, GDP per capita improves the tree by lowering the MSE the most and vice versa - when it is missing, the MSE is a lot higher. <br> Node Purity on the other hand represents how well the tree splits the data in similar target values. The more often variable is used for splitting a node in two further branches, the more important is the variable. In this plot GDP per capita again ranks highest, which means that it provides a useful condition on which to split groups. <br> When predicting the happiness score, GDP per capita and healthy life expectancy are ranked the highest for both importance measures. This coincides with the high correlations that have been measured for the scatter plots between happiness score and the two variables. <br> An important thing to keep in mind is that there is an element of randomness in these results. For different seeds, the top four variables are stable, but how important they are and their ranking can be different. It also should be noted at an increased MSE of 20% for example freedom to make life choices is still a strong impact, even if this variable appears of low rank compared to others.
 
 # Discussion
 
