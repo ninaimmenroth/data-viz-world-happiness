@@ -934,18 +934,20 @@ my.text.panel <- function(labels) {
 ```{r fig.width=10, fig.height=10}
 #| echo: false
 #| label: fig-k-means-plot
-#| fig-cap: "Matrix of scatterplots colored by cluster." 
+#| fig-cap: "Matrix of scatterplots colored by cluster. HS = Happiness Score, GpC = GDP per Capita, SS = Social Support, HLE = Healthy Life Expectancy, FtmLC = Freedom to make life choices, G = Generosity, PoC = Perception of Corruption." 
 #| fig-scap: "Matrix of scatterplots colored by cluster."
 #| layout-ncol: 1
 # plot resulting clustering
 pairs(sc_whr, col = km.out$cluster, upper.panel = NULL, gap = 0,
-      text.panel = my.text.panel(c(happiness_score="Happiness Score",
-                                   gdp_per_capita="GDP p. Capita",
-                                   social_support="Social Support",
-                                   healthy_life_expectancy="HL Expectancy",
-                                   freedom_to_make_life_choices = "Freedom Life Choices",
-                                   generosity = "Generosity",
-                                   perceptions_of_corruption = "Perceived corruption")))
+      text.panel = my.text.panel(c(happiness_score="HS",
+                                   gdp_per_capita="GpC",
+                                   social_support="SS",
+                                   healthy_life_expectancy="HLE",
+                                   freedom_to_make_life_choices = "FtmLC",
+                                   generosity = "G",
+                                   perceptions_of_corruption = "PoC")),
+      cex.labels = 3,
+      cex.axis = 1.2)
 ```
 
 When looking at the scatter plots in @fig-k-means-plot, the first thing to be noted is that for happiness score, there is the cleanest split between the clusters which basically splits the plot into a happiness score that is bigger than 0 and vice versa. In other words, the clusters are strongly informed by whether the happiness score is in the upper 50% quantile or below.
