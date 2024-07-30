@@ -507,8 +507,8 @@ The plot of perceptions of corruption (subplot f) shows a slight upward trend in
 #| layout-ncol: 1
 whr$year <- as.factor(whr$year)
 whr |>
-  ggplot(aes(x = year, y = happiness_score, fill = year)) +
-  geom_boxplot() +
+  ggplot(aes(x = year, y = happiness_score)) +
+  geom_boxplot(fill="coral") +
   theme(legend.position = "none",
         axis.title.y = element_blank(),
         text = element_text(size = 15))+
